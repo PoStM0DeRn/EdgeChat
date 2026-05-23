@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Document {
+  id         String         @id @default(cuid())
+  filename   String
+  fileType   String         // "pdf", "txt", "md"
+  fileSize   Int
+  status     String         @default("uploading") // uploading, processing, parsed, embedded, error
+  errorMsg   String?
+  chunkCount Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  chunks     DocumentChunk[]
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  content    String
+  chunkIndex Int
+  embedding  String?  // JSON array of floats, null until vectorized
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+model Prompt {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  title     String
+  content   String
+  isPublic  Boolean  @default(false)
+  isDefault Boolean  @default(false) // seeded default prompts
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ChatSession {
+  id             String        @id @default(cuid())
+  title          String        @default("Новый чат")
+  model          String?
+  systemPromptId String?
+  documentId     String?       // attached document for RAG
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      String      // "user", "assistant", "system"
+  content   String
+  createdAt DateTime    @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }
