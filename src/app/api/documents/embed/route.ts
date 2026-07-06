@@ -2,54 +2,54 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getEmbedding } from '@/lib/embeddings'
 
+export const runtime = 'nodejs'
+
 export async function POST(req: NextRequest) {
   try {
-    const { documentId, tunnelUrl, token, embedModel } = await req.json()
+    const body = await req.json()
+    const { documentId, llmUrl, token, embedModel } = body as {
+      documentId: string
+      llmUrl: string
+      token?: string
+      embedModel?: string
+    }
 
-    if (!documentId || !tunnelUrl) {
+    if (!documentId || !llmUrl) {
       return NextResponse.json(
-        { error: 'Не указан documentId или tunnelUrl' },
+        { error: 'documentId и llmUrl обязательны' },
         { status: 400 }
       )
     }
 
-    const document = await db.document.findUnique({
+    const doc = await db.document.findUnique({
       where: { id: documentId },
-      include: { chunks: true },
+      include: { chunks: { orderBy: { chunkIndex: 'asc' } } },
     })
 
-    if (!document) {
-      return NextResponse.json(
-        { error: 'Документ не найден' },
-        { status: 404 }
-      )
+    if (!doc) {
+      return NextResponse.json({ error: 'Документ не найден' }, { status: 404 })
     }
 
-    // Get chunks without embeddings
-    const unembeddedChunks = document.chunks.filter((c) => !c.embedding)
-
-    if (unembeddedChunks.length === 0) {
-      await db.document.update({
-        where: { id: documentId },
-        data: { status: 'embedded' },
-      })
-      return NextResponse.json({
-        message: 'Все чанки уже векторизованы',
-        embedded: 0,
-        total: document.chunks.length,
-      })
+    if (doc.chunks.length === 0) {
+      return NextResponse.json({ error: 'Нет чанков для векторизации' }, { status: 400 })
     }
+
+    // Update status to processing
+    await db.document.update({
+      where: { id: documentId },
+      data: { status: 'processing' },
+    })
 
     let embeddedCount = 0
     let errors = 0
 
-    for (const chunk of unembeddedChunks) {
+    for (const chunk of doc.chunks) {
       try {
         const embedding = await getEmbedding(
           chunk.content,
-          tunnelUrl,
+          llmUrl,
           token,
-          embedModel
+          embedModel || 'nomic-embed-text'
         )
         await db.documentChunk.update({
           where: { id: chunk.id },
@@ -57,31 +57,39 @@ export async function POST(req: NextRequest) {
         })
         embeddedCount++
       } catch (err) {
-        console.error(`Embedding error for chunk ${chunk.id}:`, err)
+        console.error(`Embedding error for chunk ${chunk.chunkIndex}:`, err)
         errors++
       }
     }
 
-    const allChunks = await db.documentChunk.findMany({
-      where: { documentId },
-    })
-    const allEmbedded = allChunks.every((c) => c.embedding)
+    if (embeddedCount === 0) {
+      await db.document.update({
+        where: { id: documentId },
+        data: { status: 'error', errorMsg: 'Не удалось векторизовать ни один чанк' },
+      })
+      return NextResponse.json(
+        { error: 'Ошибка векторизации всех чанков' },
+        { status: 500 }
+      )
+    }
 
+    // Update status to embedded
     await db.document.update({
       where: { id: documentId },
-      data: {
-        status: allEmbedded ? 'embedded' : 'parsed',
-      },
+      data: { status: 'embedded' },
     })
 
     return NextResponse.json({
+      ok: true,
       embedded: embeddedCount,
       errors,
-      total: allChunks.length,
-      allEmbedded,
+      total: doc.chunks.length,
     })
-  } catch (error) {
-    console.error('Embed error:', error)
-    return NextResponse.json({ error: 'Ошибка векторизации' }, { status: 500 })
+  } catch (err) {
+    console.error('Embed error:', err)
+    return NextResponse.json(
+      { error: `Ошибка векторизации: ${err instanceof Error ? err.message : 'Unknown'}` },
+      { status: 500 }
+    )
   }
 }

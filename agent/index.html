@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TunnelChat Agent</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 100vh;
+      border: 1px solid #333;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #16213e;
+      border-bottom: 1px solid #333;
+    }
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .close-btn {
+      -webkit-app-region: no-drag;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 18px;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .close-btn:hover { background: #333; color: #fff; }
+
+    .content {
+      padding: 20px;
+      -webkit-app-region: no-drag;
+      overflow-y: auto;
+      max-height: calc(100vh - 48px);
+    }
+
+    .status-card {
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .status-card.online { background: #0f3d0f; border: 1px solid #2d5a2d; }
+    .status-card.offline { background: #3d0f0f; border: 1px solid #5a2d2d; }
+    .status-card.connecting { background: #3d3d0f; border: 1px solid #5a5a2d; }
+
+    .status-icon { font-size: 32px; margin-bottom: 8px; }
+    .status-text { font-size: 14px; font-weight: 500; }
+    .status-detail { font-size: 11px; color: #999; margin-top: 4px; }
+
+    .ollama-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    .ollama-badge.ok { background: #1a3a1a; color: #4ade80; }
+    .ollama-badge.err { background: #3a1a1a; color: #f87171; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #0f0f23;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: #667eea; }
+    .form-group input::placeholder { color: #555; }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-connect {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+    }
+    .btn-connect:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-connect:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-save {
+      background: #2a2a4a;
+      color: #aaa;
+      border: 1px solid #444;
+      margin-bottom: 8px;
+    }
+    .btn-save:hover { background: #3a3a5a; color: #fff; }
+    .btn-disconnect {
+      background: #3d0f0f;
+      color: #f87171;
+      border: 1px solid #5a2d2d;
+    }
+    .btn-disconnect:hover { background: #4d1f1f; }
+
+    .hidden { display: none !important; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🖥️ TunnelChat Agent</h1>
+    <button class="close-btn" onclick="window.electronAPI?.minimize()">×</button>
+  </div>
+
+  <div class="content">
+    <div id="status-card" class="status-card offline">
+      <div class="status-icon" id="status-icon">🔴</div>
+      <div class="status-text" id="status-text">Отключён</div>
+      <div class="status-detail" id="status-detail">Настройте подключение ниже</div>
+      <div id="ollama-badge" class="ollama-badge err">
+        <span>●</span> Проверяю LM Studio...
+      </div>
+    </div>
+
+    <div id="config-form">
+      <div class="form-group">
+        <label>URL сервера</label>
+        <input type="url" id="saas-url" placeholder="https://your-saas.vercel.app">
+      </div>
+      <div class="form-group">
+        <label>Токен Агента</label>
+        <input type="password" id="agent-token" placeholder="Вставьте токен из SaaS">
+      </div>
+      <div class="form-group">
+        <label>Имя Агента</label>
+        <input type="text" id="agent-name" placeholder="My PC" value="My PC">
+      </div>
+      <div class="form-group">
+        <label>LM Studio URL</label>
+        <input type="url" id="lmstudio-url" placeholder="http://localhost:1234" value="http://localhost:1234">
+      </div>
+      <div class="form-group">
+        <label>Модель LM Studio</label>
+        <input type="text" id="lmstudio-model" placeholder="qwythos-9b-claude-mythos-5-1m">
+      </div>
+    </div>
+
+    <button class="btn btn-save" id="btn-save" onclick="handleSave()">
+      Сохранить
+    </button>
+    <button class="btn btn-connect" id="btn-connect" onclick="handleConnect()">
+      Подключиться
+    </button>
+    <button class="btn btn-disconnect hidden" id="btn-disconnect" onclick="handleDisconnect()">
+      Отключиться
+    </button>
+  </div>
+
+  <script>
+    let connected = false
+
+    async function init() {
+      const config = await window.agent.getConfig()
+      if (config.saasUrl) document.getElementById('saas-url').value = config.saasUrl
+      if (config.agentToken) document.getElementById('agent-token').value = config.agentToken
+      if (config.agentName) document.getElementById('agent-name').value = config.agentName
+      if (config.lmstudioUrl) document.getElementById('lmstudio-url').value = config.lmstudioUrl
+      if (config.lmstudioModel) document.getElementById('lmstudio-model').value = config.lmstudioModel
+
+      const status = await window.agent.getStatus()
+      updateUI(status)
+
+      const lmstudio = await window.agent.checkLMStudio()
+      const badge = document.getElementById('ollama-badge')
+      if (lmstudio.ok) {
+        badge.className = 'ollama-badge ok'
+        badge.innerHTML = `<span>●</span> LM Studio: ${lmstudio.models?.slice(0, 3).join(', ') || 'Подключён'}`
+      } else {
+        badge.className = 'ollama-badge err'
+        badge.innerHTML = `<span>●</span> LM Studio: ${lmstudio.error || 'Не найден'}`
+      }
+
+      window.agent.onStatus((status) => updateUI(status))
+    }
+
+    function updateUI(status) {
+      const card = document.getElementById('status-card')
+      const icon = document.getElementById('status-icon')
+      const text = document.getElementById('status-text')
+      const detail = document.getElementById('status-detail')
+      const btnConnect = document.getElementById('btn-connect')
+      const btnDisconnect = document.getElementById('btn-disconnect')
+
+      if (status.online) {
+        card.className = 'status-card online'
+        icon.textContent = '🟢'
+        text.textContent = 'Подключён'
+        detail.textContent = status.name || 'Агент работает'
+        btnConnect.classList.add('hidden')
+        btnDisconnect.classList.remove('hidden')
+        connected = true
+      } else if (status.error) {
+        card.className = 'status-card offline'
+        icon.textContent = '🔴'
+        text.textContent = 'Ошибка'
+        detail.textContent = status.error
+        btnConnect.classList.remove('hidden')
+        btnConnect.disabled = false
+        btnDisconnect.classList.add('hidden')
+        connected = false
+      } else {
+        card.className = 'status-card offline'
+        icon.textContent = '🔴'
+        text.textContent = 'Отключён'
+        detail.textContent = 'Настройте подключение ниже'
+        btnConnect.classList.remove('hidden')
+        btnConnect.disabled = false
+        btnDisconnect.classList.add('hidden')
+        connected = false
+      }
+    }
+
+    async function handleSave() {
+      const saasUrl = document.getElementById('saas-url').value.trim()
+      const agentToken = document.getElementById('agent-token').value.trim()
+      const agentName = document.getElementById('agent-name').value.trim() || 'My PC'
+      const lmstudioUrl = document.getElementById('lmstudio-url').value.trim() || 'http://localhost:1234'
+      const lmstudioModel = document.getElementById('lmstudio-model').value.trim()
+
+      await window.agent.saveConfig({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel })
+      const btn = document.getElementById('btn-save')
+      btn.textContent = '✓ Сохранено'
+      setTimeout(() => { btn.textContent = 'Сохранить' }, 1500)
+    }
+
+    async function handleConnect() {
+      const saasUrl = document.getElementById('saas-url').value.trim()
+      const agentToken = document.getElementById('agent-token').value.trim()
+      const agentName = document.getElementById('agent-name').value.trim() || 'My PC'
+      const lmstudioUrl = document.getElementById('lmstudio-url').value.trim() || 'http://localhost:1234'
+      const lmstudioModel = document.getElementById('lmstudio-model').value.trim()
+
+      if (!saasUrl || !agentToken) {
+        updateUI({ error: 'Заполните URL сервера и токен' })
+        return
+      }
+
+      const btn = document.getElementById('btn-connect')
+      btn.disabled = true
+      btn.innerHTML = '<span class="spinner"></span>Подключение...'
+      updateUI({ online: false })
+
+      await window.agent.connect({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel })
+    }
+
+    async function handleDisconnect() {
+      await window.agent.disconnect()
+      updateUI({ online: false })
+    }
+
+    init()
+  </script>
+</body>
+</html>

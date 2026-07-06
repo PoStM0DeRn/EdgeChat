@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Дырявый чат — Прокси к локальной LLM",
+  title: "TunnelChat — Прокси к локальной LLM",
   description: "MVP: проксируйте запросы от UI к вашей локальной модели через интернет с потоковым стримингом ответов.",
   keywords: ["LLM", "Ollama", "ngrok", "chat", "streaming", "proxy", "local AI"],
   authors: [{ name: "Leaky Chat" }],

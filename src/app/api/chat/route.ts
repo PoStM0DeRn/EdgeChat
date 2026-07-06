@@ -1,228 +1,133 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getEmbedding, cosineSimilarity } from '@/lib/embeddings'
 
-// NOTE: Do NOT use `export const runtime = 'edge'` here.
-// Prisma requires Node.js runtime.
+export const runtime = 'nodejs'
+
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
 
 interface ChatMessage {
-  role: 'system' | 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   content: string
 }
 
-interface ChatRequest {
-  messages: ChatMessage[]
-  tunnelUrl: string
-  token?: string
-  model?: string
-  documentId?: string
-  systemPrompt?: string
-}
-
 export async function POST(req: NextRequest) {
-  const body: ChatRequest = await req.json()
-  const { messages, tunnelUrl, token, model, documentId, systemPrompt } = body
+  try {
+    const body = await req.json()
+    const { messages, token, model, documentId, systemPrompt, agentToken } = body as {
+      messages: ChatMessage[]
+      token?: string
+      model?: string
+      documentId?: string
+      systemPrompt?: string
+      agentToken?: string
+    }
 
-  if (!tunnelUrl) {
-    return new Response(
-      JSON.stringify({ error: 'URL туннеля не указан' }),
-      {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
+    if (!messages || messages.length === 0) {
+      return NextResponse.json({ error: 'Нет сообщений' }, { status: 400 })
+    }
+
+    if (!agentToken) {
+      return NextResponse.json({ error: 'Укажите токен Агента' }, { status: 400 })
+    }
+
+    // Build system prompt
+    let contextBlock = ''
+
+    // RAG: if document is selected, use first 3 chunks as context
+    if (documentId) {
+      try {
+        const doc = await db.document.findUnique({
+          where: { id: documentId },
+          include: { chunks: true },
+        })
+
+        if (doc && doc.chunks.length > 0) {
+          const relevantChunks = doc.chunks.slice(0, 3)
+          if (relevantChunks.length > 0) {
+            contextBlock = '\n\n--- КОНТЕКСТ ИЗ ДОКУМЕНТА ---\n' +
+              relevantChunks.map((c, i) => `[${i + 1}] ${c.content}`).join('\n\n') +
+              '\n--- КОНЕЦ КОНТЕКСТА ---\n'
+          }
+        }
+      } catch (err) {
+        console.error('RAG error:', err)
       }
-    )
-  }
+    }
 
-  const baseUrl = tunnelUrl.replace(/\/+$/, '')
-  const endpoint = `${baseUrl}/v1/chat/completions`
+    let fullSystemPrompt = systemPrompt || ''
+    if (contextBlock) {
+      fullSystemPrompt += contextBlock
+    }
 
-  // Build the system message
-  let systemContent =
-    systemPrompt ||
-    'Ты полезный ассистент. Отвечай чётко и по существу.'
+    // Build messages for LLM
+    const llmMessages: { role: string; content: string }[] = []
+    if (fullSystemPrompt) {
+      llmMessages.push({ role: 'system', content: fullSystemPrompt })
+    }
+    for (const msg of messages) {
+      llmMessages.push({ role: msg.role, content: msg.content })
+    }
 
-  // RAG: If documentId is provided, find relevant chunks
-  if (documentId) {
+    // ═══════════════════════════════════════════
+    // Forward request to Desktop Agent via WebSocket
+    // ═══════════════════════════════════════════
+    const requestId = crypto.randomUUID()
+
     try {
-      const document = await db.document.findUnique({
-        where: { id: documentId },
-        include: { chunks: true },
+      const wsResponse = await fetch(`${WS_SERVER_URL}/api/agent/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: agentToken,
+          requestId,
+          messages: llmMessages,
+          model: model || 'llama3',
+          systemPrompt: fullSystemPrompt || undefined,
+        }),
+        signal: AbortSignal.timeout(120_000),
       })
 
-      if (document && document.chunks.length > 0) {
-        const lastUserMessage =
-          messages.filter((m) => m.role === 'user').pop()?.content || ''
-
-        // Get embedded chunks
-        const embeddedChunks = document.chunks.filter((c) => c.embedding)
-
-        if (embeddedChunks.length > 0 && lastUserMessage) {
-          // Vectorize the query
-          try {
-            const queryEmbedding = await getEmbedding(
-              lastUserMessage,
-              tunnelUrl,
-              token
-            )
-
-            // Compute similarities
-            const scored = embeddedChunks.map((chunk) => {
-              const chunkEmbedding = JSON.parse(chunk.embedding!) as number[]
-              return {
-                content: chunk.content,
-                score: cosineSimilarity(queryEmbedding, chunkEmbedding),
-              }
-            })
-
-            // Sort by similarity and take top 5
-            scored.sort((a, b) => b.score - a.score)
-            const topChunks = scored.slice(0, 5)
-
-            const contextBlock = topChunks
-              .map((c, i) => `[Фрагмент ${i + 1}]\n${c.content}`)
-              .join('\n\n')
-
-            systemContent = `${
-              systemPrompt ||
-              'Ты полезный ассистент. Отвечай на вопрос пользователя, используя только предоставленный контекст. Если ответа в контексте нет, скажи "Я не нашёл ответа в документе".'
-            }\n\nКонтекст из документа "${document.filename}":\n\n${contextBlock}`
-          } catch (embedError) {
-            console.error(
-              'Embedding query failed, falling back to all chunks:',
-              embedError
-            )
-            // Fallback: use first 3 chunks if embedding fails
-            const fallbackChunks = document.chunks.slice(0, 3)
-            const contextBlock = fallbackChunks
-              .map((c, i) => `[Фрагмент ${i + 1}]\n${c.content}`)
-              .join('\n\n')
-            systemContent = `${systemContent}\n\nКонтекст из документа "${document.filename}" (без векторного поиска):\n\n${contextBlock}`
-          }
-        } else if (document.chunks.length > 0) {
-          // No embeddings available, use first 3 chunks
-          const fallbackChunks = document.chunks.slice(0, 3)
-          const contextBlock = fallbackChunks
-            .map((c, i) => `[Фрагмент ${i + 1}]\n${c.content}`)
-            .join('\n\n')
-          systemContent = `${systemContent}\n\nКонтекст из документа "${document.filename}" (без векторного поиска):\n\n${contextBlock}`
-        }
+      if (!wsResponse.ok) {
+        const err = await wsResponse.json().catch(() => ({ error: 'Agent unavailable' }))
+        return NextResponse.json(
+          { error: err.error || 'Агент недоступен' },
+          { status: 502 }
+        )
       }
-    } catch (ragError) {
-      console.error('RAG error:', ragError)
-      // Continue without RAG context
-    }
-  }
 
-  // Build final messages array with system prompt
-  const finalMessages: ChatMessage[] = [
-    { role: 'system', content: systemContent },
-    ...messages.filter((m) => m.role !== 'system'),
-  ]
+      const result = await wsResponse.json() as { ok: boolean; chunks: { type: string; content: string }[] }
 
-  try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
+      // Stream collected chunks back to client as SSE
+      const stream = new ReadableStream({
+        start(controller) {
+          for (const chunk of result.chunks) {
+            controller.enqueue(
+              new TextEncoder().encode(`data: ${JSON.stringify({ type: chunk.type, content: chunk.content })}\n\n`)
+            )
+          }
+          controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+          controller.close()
+        },
+      })
 
-    const upstreamRes = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: model || 'default',
-        messages: finalMessages,
-        stream: true,
-      }),
-    })
-
-    if (!upstreamRes.ok) {
-      const errorText = await upstreamRes.text()
-      return new Response(
-        JSON.stringify({
-          error: `Ошибка от модели (${upstreamRes.status}): ${errorText}`,
-        }),
-        {
-          status: upstreamRes.status,
-          headers: { 'Content-Type': 'application/json' },
-        }
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
+    } catch (err) {
+      return NextResponse.json(
+        { error: `Ошибка подключения к Агенту: ${err instanceof Error ? err.message : 'Unknown'}` },
+        { status: 502 }
       )
     }
-
-    // Forward SSE stream
-    const encoder = new TextEncoder()
-    const decoder = new TextDecoder()
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = upstreamRes.body?.getReader()
-        if (!reader) {
-          controller.close()
-          return
-        }
-
-        let buffer = ''
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-
-            buffer += decoder.decode(value, { stream: true })
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || ''
-
-            for (const line of lines) {
-              const trimmed = line.trim()
-              if (!trimmed || !trimmed.startsWith('data: ')) continue
-              const data = trimmed.slice(6)
-              if (data === '[DONE]') {
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-                continue
-              }
-              try {
-                const parsed = JSON.parse(data)
-                const content = parsed.choices?.[0]?.delta?.content
-                if (content) {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({ content, model: parsed.model })}\n\n`
-                    )
-                  )
-                }
-              } catch {
-                controller.enqueue(encoder.encode(`data: ${data}\n\n`))
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Stream error:', err)
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ error: 'Соединение разорвано' })}\n\n`
-            )
-          )
-        } finally {
-          reader.releaseLock()
-          controller.close()
-        }
-      },
-    })
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
-    })
-  } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : 'Неизвестная ошибка'
-    return new Response(
-      JSON.stringify({ error: `Не удалось подключиться: ${message}` }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
+  } catch (err) {
+    console.error('Chat API error:', err)
+    return NextResponse.json(
+      { error: `Внутренняя ошибка: ${err instanceof Error ? err.message : 'Unknown'}` },
+      { status: 500 }
     )
   }
 }

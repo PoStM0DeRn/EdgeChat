@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3001:81"
+    environment:
+      - DATABASE_URL=file:/app/db/custom.db
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    volumes:
+      - db-data:/app/db
+      - uploads-data:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  uploads-data:

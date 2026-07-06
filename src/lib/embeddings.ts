@@ -1,14 +1,14 @@
 /**
- * Get embeddings from the user's local Ollama instance via tunnel.
+ * Get embeddings from the user's local LLM instance.
  * Tries /api/embeddings (Ollama native) first, then /v1/embeddings (OpenAI-compatible).
  */
 export async function getEmbedding(
   text: string,
-  tunnelUrl: string,
+  llmUrl: string,
   token?: string,
   model?: string
 ): Promise<number[]> {
-  const baseUrl = tunnelUrl.replace(/\/+$/, '')
+  const baseUrl = llmUrl.replace(/\/+$/, '')
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

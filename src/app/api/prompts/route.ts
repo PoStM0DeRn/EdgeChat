@@ -2,65 +2,71 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { defaultPrompts } from '@/lib/default-prompts'
 
+export const runtime = 'nodejs'
+
 export async function GET() {
   try {
-    // Get DB prompts
-    const dbPrompts = await db.prompt.findMany({
-      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+    // Get user prompts from DB
+    const userPrompts = await db.prompt.findMany({
+      orderBy: { createdAt: 'desc' },
     })
 
-    // If no default prompts seeded yet, return defaults from code
-    if (dbPrompts.filter((p) => p.isDefault).length === 0) {
-      return NextResponse.json([
-        ...defaultPrompts.map((p, i) => ({
-          id: `default-${i}`,
-          title: p.title,
-          content: p.content,
-          isPublic: true,
-          isDefault: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })),
-        ...dbPrompts,
-      ])
-    }
+    // Merge with defaults (user prompts take precedence)
+    const defaultPromptRecords = defaultPrompts.map((p, i) => ({
+      id: `default-${i}`,
+      title: p.title,
+      content: p.content,
+      isDefault: true,
+      isPublic: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }))
 
-    return NextResponse.json(dbPrompts)
-  } catch (error) {
-    console.error('List prompts error:', error)
-    // Fallback to code defaults
-    return NextResponse.json(
-      defaultPrompts.map((p, i) => ({
-        id: `default-${i}`,
-        title: p.title,
-        content: p.content,
-        isPublic: true,
-        isDefault: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }))
-    )
+    // Filter out defaults that user has overridden
+    const result = [
+      ...defaultPromptRecords,
+      ...userPrompts.map((p) => ({
+        ...p,
+        isDefault: false,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    ]
+
+    return NextResponse.json(result)
+  } catch (err) {
+    console.error('Prompts GET error:', err)
+    return NextResponse.json({ error: 'Ошибка загрузки промптов' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, content } = await req.json()
-    if (!title || !content) {
+    const body = await req.json()
+    const { title, content } = body as { title: string; content: string }
+
+    if (!title?.trim() || !content?.trim()) {
       return NextResponse.json(
-        { error: 'Заголовок и содержание обязательны' },
+        { error: 'title и content обязательны' },
         { status: 400 }
       )
     }
+
     const prompt = await db.prompt.create({
-      data: { title, content, isPublic: false, isDefault: false },
+      data: {
+        title: title.trim(),
+        content: content.trim(),
+      },
     })
-    return NextResponse.json(prompt)
-  } catch (error) {
-    console.error('Create prompt error:', error)
-    return NextResponse.json(
-      { error: 'Ошибка создания промпта' },
-      { status: 500 }
-    )
+
+    return NextResponse.json({
+      ...prompt,
+      isDefault: false,
+      createdAt: prompt.createdAt.toISOString(),
+      updatedAt: prompt.updatedAt.toISOString(),
+    })
+  } catch (err) {
+    console.error('Prompts POST error:', err)
+    return NextResponse.json({ error: 'Ошибка создания промпта' }, { status: 500 })
   }
 }

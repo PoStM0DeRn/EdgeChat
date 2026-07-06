@@ -5,14 +5,15 @@ export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
   content: string
+  reasoningContent?: string
   timestamp: number
 }
 
 export interface Settings {
-  tunnelUrl: string
   token: string
   model: string
   embedModel: string
+  agentToken: string
 }
 
 export interface DocumentInfo {
@@ -22,6 +23,7 @@ export interface DocumentInfo {
   fileSize: number
   status: string
   chunkCount: number
+  errorMsg?: string
   createdAt: string
 }
 
@@ -31,6 +33,17 @@ export interface PromptInfo {
   content: string
   isDefault: boolean
   isPublic: boolean
+}
+
+export interface SessionInfo {
+  id: string
+  title: string
+  model: string | null
+  systemPromptId: string | null
+  documentId: string | null
+  messageCount: number
+  createdAt: string
+  updatedAt: string
 }
 
 interface ChatState {
@@ -43,18 +56,16 @@ interface ChatState {
   isStreaming: boolean
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void
   appendToLastAssistantMessage: (token: string) => void
+  appendToLastAssistantReasoning: (token: string) => void
   setIsStreaming: (value: boolean) => void
   clearMessages: () => void
+  removeMessage: (id: string) => void
+  replaceMessage: (id: string, content: string) => void
 
-  // Health
-  healthStatus: 'unknown' | 'checking' | 'connected' | 'error'
-  healthModels: string[]
-  healthEndpoint: string
-  setHealthStatus: (
-    status: 'unknown' | 'checking' | 'connected' | 'error',
-    models?: string[],
-    endpoint?: string
-  ) => void
+  // Agent
+  agentOnline: boolean
+  agentName: string | null
+  setAgentStatus: (online: boolean, name: string | null) => void
 
   // Documents (RAG)
   documents: DocumentInfo[]
@@ -68,11 +79,21 @@ interface ChatState {
   selectedPromptId: string | null
   setSelectedPromptId: (id: string | null) => void
 
+  // Sessions
+  sessions: SessionInfo[]
+  setSessions: (sessions: SessionInfo[]) => void
+  currentSessionId: string | null
+  setCurrentSessionId: (id: string | null) => void
+  currentSessionTitle: string
+  setCurrentSessionTitle: (title: string) => void
+
   // UI State
-  sidebarTab: 'settings' | 'documents' | 'prompts'
-  setSidebarTab: (tab: 'settings' | 'documents' | 'prompts') => void
+  sidebarTab: 'settings' | 'documents' | 'prompts' | 'sessions'
+  setSidebarTab: (tab: 'settings' | 'documents' | 'prompts' | 'sessions') => void
   settingsOpen: boolean
   setSettingsOpen: (open: boolean) => void
+  sidebarWidth: number
+  setSidebarWidth: (width: number) => void
 }
 
 export const useChatStore = create<ChatState>()(
@@ -80,10 +101,10 @@ export const useChatStore = create<ChatState>()(
     (set) => ({
       // Settings
       settings: {
-        tunnelUrl: '',
         token: '',
         model: '',
         embedModel: 'nomic-embed-text',
+        agentToken: '',
       },
       setSettings: (partial) =>
         set((state) => ({
@@ -112,18 +133,38 @@ export const useChatStore = create<ChatState>()(
           }
           return { messages: msgs }
         }),
+      appendToLastAssistantReasoning: (token) =>
+        set((state) => {
+          const msgs = [...state.messages]
+          const lastIdx = msgs.findLastIndex((m) => m.role === 'assistant')
+          if (lastIdx >= 0) {
+            msgs[lastIdx] = {
+              ...msgs[lastIdx],
+              reasoningContent: (msgs[lastIdx].reasoningContent || '') + token,
+            }
+          }
+          return { messages: msgs }
+        }),
       setIsStreaming: (value) => set({ isStreaming: value }),
       clearMessages: () => set({ messages: [] }),
+      removeMessage: (id) =>
+        set((state) => ({
+          messages: state.messages.filter((m) => m.id !== id),
+        })),
+      replaceMessage: (id, content) =>
+        set((state) => ({
+          messages: state.messages.map((m) =>
+            m.id === id ? { ...m, content } : m
+          ),
+        })),
 
-      // Health
-      healthStatus: 'unknown',
-      healthModels: [],
-      healthEndpoint: '',
-      setHealthStatus: (status, models, endpoint) =>
+      // Agent
+      agentOnline: false,
+      agentName: null,
+      setAgentStatus: (online, name) =>
         set({
-          healthStatus: status,
-          healthModels: models || [],
-          healthEndpoint: endpoint || '',
+          agentOnline: online,
+          agentName: name,
         }),
 
       // Documents
@@ -138,19 +179,31 @@ export const useChatStore = create<ChatState>()(
       selectedPromptId: null,
       setSelectedPromptId: (id) => set({ selectedPromptId: id }),
 
+      // Sessions
+      sessions: [],
+      setSessions: (sessions) => set({ sessions }),
+      currentSessionId: null,
+      setCurrentSessionId: (id) => set({ currentSessionId: id }),
+      currentSessionTitle: 'Новый чат',
+      setCurrentSessionTitle: (title) => set({ currentSessionTitle: title }),
+
       // UI
       sidebarTab: 'settings',
       setSidebarTab: (tab) => set({ sidebarTab: tab }),
       settingsOpen: false,
       setSettingsOpen: (open) => set({ settingsOpen: open }),
+      sidebarWidth: 320,
+      setSidebarWidth: (width) => set({ sidebarWidth: width }),
     }),
     {
       name: 'leaky-chat-storage-v2',
       partialize: (state) => ({
         settings: state.settings,
-        messages: state.messages,
+        currentSessionId: state.currentSessionId,
+        currentSessionTitle: state.currentSessionTitle,
         selectedDocumentId: state.selectedDocumentId,
         selectedPromptId: state.selectedPromptId,
+        sidebarWidth: state.sidebarWidth,
       }),
     }
   )
