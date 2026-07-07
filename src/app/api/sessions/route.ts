@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const sessions = await db.chatSession.findMany({
+      where: { userId },
       orderBy: { updatedAt: 'desc' },
       include: {
         _count: { select: { messages: true } },
@@ -32,6 +39,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const body = await req.json()
     const { title, model, systemPromptId, documentId } = body as {
       title?: string
@@ -42,6 +54,7 @@ export async function POST(req: NextRequest) {
 
     const session = await db.chatSession.create({
       data: {
+        userId,
         title: title || 'Новый чат',
         model: model || null,
         systemPromptId: systemPromptId || null,

@@ -4,11 +4,17 @@ import { parsePdf, parseTxt, parseMarkdown } from '@/lib/pdf-parser'
 import { chunkText } from '@/lib/chunker'
 import { join } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const file = formData.get('file') as File | null
 
@@ -16,7 +22,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Файл не загружен' }, { status: 400 })
     }
 
-    // Validate file type
     const allowedTypes = ['.pdf', '.txt', '.md', '.markdown']
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!allowedTypes.includes(ext)) {
@@ -26,9 +31,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create document record
     const doc = await db.document.create({
       data: {
+        userId,
         filename: file.name,
         fileType: ext.replace('.', ''),
         fileSize: file.size,
@@ -36,13 +41,11 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Save file to disk
     const uploadDir = join(process.cwd(), 'uploads', doc.id)
     await mkdir(uploadDir, { recursive: true })
     const buffer = Buffer.from(await file.arrayBuffer())
     await writeFile(join(uploadDir, file.name), buffer)
 
-    // Parse file
     let text = ''
     try {
       if (ext === '.pdf') {
@@ -63,10 +66,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Chunk text
     const chunks = chunkText(text)
 
-    // Save chunks to DB
     for (const chunk of chunks) {
       await db.documentChunk.create({
         data: {
@@ -77,7 +78,6 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Update document status
     await db.document.update({
       where: { id: doc.id },
       data: { status: 'parsed', chunkCount: chunks.length },

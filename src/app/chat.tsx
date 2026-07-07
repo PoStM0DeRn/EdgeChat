@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { useSession, signOut } from 'next-auth/react'
 import { useChatStore } from '@/lib/store'
 import { MarkdownMessage } from '@/components/chat/markdown-message'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,7 @@ import {
 } from 'lucide-react'
 
 export function ChatPage() {
+  const { data: session } = useSession()
   const {
     settings,
     setSettings,
@@ -972,6 +974,21 @@ export function ChatPage() {
               {agentOnline ? '🟢 Агент' : '🔴 Агент'}
             </span>
           </div>
+          {session?.user && (
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline text-xs text-muted-foreground">
+                {session.user.name || session.user.email}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => signOut({ callbackUrl: '/login' })}
+              >
+                Выйти
+              </Button>
+            </div>
+          )}
 
 
         </div>

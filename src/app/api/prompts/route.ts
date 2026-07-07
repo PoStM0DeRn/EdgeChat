@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { defaultPrompts } from '@/lib/default-prompts'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
   try {
-    // Get user prompts from DB
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const userPrompts = await db.prompt.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     })
 
-    // Merge with defaults (user prompts take precedence)
     const defaultPromptRecords = defaultPrompts.map((p, i) => ({
       id: `default-${i}`,
       title: p.title,
@@ -22,7 +27,6 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     }))
 
-    // Filter out defaults that user has overridden
     const result = [
       ...defaultPromptRecords,
       ...userPrompts.map((p) => ({
@@ -42,6 +46,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const body = await req.json()
     const { title, content } = body as { title: string; content: string }
 
@@ -54,6 +63,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = await db.prompt.create({
       data: {
+        userId,
         title: title.trim(),
         content: content.trim(),
       },

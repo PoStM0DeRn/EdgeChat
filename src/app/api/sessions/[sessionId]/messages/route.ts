@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -8,6 +9,11 @@ export async function POST(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { sessionId } = await params
     const body = await req.json()
     const { role, content } = body as { role: string; content: string }
@@ -19,7 +25,7 @@ export async function POST(
       )
     }
 
-    const session = await db.chatSession.findUnique({ where: { id: sessionId } })
+    const session = await db.chatSession.findUnique({ where: { id: sessionId, userId } })
     if (!session) {
       return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 })
     }
@@ -32,7 +38,6 @@ export async function POST(
       },
     })
 
-    // Update session timestamp
     await db.chatSession.update({
       where: { id: sessionId },
       data: { updatedAt: new Date() },

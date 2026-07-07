@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getEmbedding } from '@/lib/embeddings'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const body = await req.json()
     const { documentId, llmUrl, token, embedModel } = body as {
       documentId: string
@@ -22,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const doc = await db.document.findUnique({
-      where: { id: documentId },
+      where: { id: documentId, userId },
       include: { chunks: { orderBy: { chunkIndex: 'asc' } } },
     })
 
@@ -34,7 +40,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Нет чанков для векторизации' }, { status: 400 })
     }
 
-    // Update status to processing
     await db.document.update({
       where: { id: documentId },
       data: { status: 'processing' },
@@ -73,7 +78,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Update status to embedded
     await db.document.update({
       where: { id: documentId },
       data: { status: 'embedded' },

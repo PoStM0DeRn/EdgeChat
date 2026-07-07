@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -8,10 +9,15 @@ export async function GET(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { sessionId } = await params
 
     const session = await db.chatSession.findUnique({
-      where: { id: sessionId },
+      where: { id: sessionId, userId },
       include: {
         messages: { orderBy: { createdAt: 'asc' } },
       },
@@ -47,6 +53,11 @@ export async function PUT(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { sessionId } = await params
     const body = await req.json()
     const { title, model, systemPromptId, documentId } = body as {
@@ -56,7 +67,7 @@ export async function PUT(
       documentId?: string
     }
 
-    const session = await db.chatSession.findUnique({ where: { id: sessionId } })
+    const session = await db.chatSession.findUnique({ where: { id: sessionId, userId } })
     if (!session) {
       return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 })
     }
@@ -91,9 +102,14 @@ export async function DELETE(
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { sessionId } = await params
 
-    const session = await db.chatSession.findUnique({ where: { id: sessionId } })
+    const session = await db.chatSession.findUnique({ where: { id: sessionId, userId } })
     if (!session) {
       return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 })
     }

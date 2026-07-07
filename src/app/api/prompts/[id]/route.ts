@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -8,11 +9,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await req.json()
     const { title, content } = body as { title: string; content: string }
 
-    const prompt = await db.prompt.findUnique({ where: { id } })
+    const prompt = await db.prompt.findUnique({ where: { id, userId } })
     if (!prompt) {
       return NextResponse.json({ error: 'Промпт не найден' }, { status: 404 })
     }
@@ -46,9 +52,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const { id } = await params
 
-    const prompt = await db.prompt.findUnique({ where: { id } })
+    const prompt = await db.prompt.findUnique({ where: { id, userId } })
     if (!prompt) {
       return NextResponse.json({ error: 'Промпт не найден' }, { status: 404 })
     }
