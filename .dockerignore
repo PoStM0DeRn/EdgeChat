@@ -9,9 +9,7 @@ db/
 uploads/
 .zscripts/dev*
 .zscripts/*.pid
-Dockerfile
 .dockerignore
-docker-compose.yml
 agent-ctx/
 download/
 examples/
