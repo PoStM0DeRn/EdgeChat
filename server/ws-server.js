@@ -44,6 +44,23 @@ const server = http.createServer((req, res) => {
     return
   }
 
+  if (req.url === '/api/agent/embed' && req.method === 'POST') {
+    let body = ''
+    req.on('data', (chunk) => { body += chunk })
+    req.on('end', async () => {
+      try {
+        const { token, text, model } = JSON.parse(body)
+        const embedding = await embedViaAgent(token, { text, model })
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ ok: true, embedding }))
+      } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: err.message }))
+      }
+    })
+    return
+  }
+
   res.writeHead(404)
   res.end()
 })
@@ -60,6 +77,7 @@ const io = new Server(server, {
 const agents = new Map()
 const socketToToken = new Map()
 const pendingRequests = new Map()
+const pendingEmbedRequests = new Map()
 
 io.on('connection', (socket) => {
   console.log(`[WS] New connection: ${socket.id}`)
@@ -106,6 +124,20 @@ io.on('connection', (socket) => {
         pendingRequests.delete(requestId)
       } else if (type && content !== undefined) {
         pending.chunks.push({ type, content })
+      }
+    }
+  })
+
+  socket.on('embed:result', (data) => {
+    const { requestId, embedding, error } = data
+    const pending = pendingEmbedRequests.get(requestId)
+    if (pending) {
+      clearTimeout(pending.timeout)
+      pendingEmbedRequests.delete(requestId)
+      if (error) {
+        pending.reject(new Error(error))
+      } else {
+        pending.resolve(embedding)
       }
     }
   })
@@ -168,6 +200,33 @@ function sendToAgent(token, request, timeoutMs = 120_000) {
   })
 }
 
+function embedViaAgent(token, request, timeoutMs = 60_000) {
+  return new Promise((resolve, reject) => {
+    const agent = agents.get(token)
+    if (!agent || Date.now() - agent.lastHeartbeat > 35_000) {
+      reject(new Error('Агент не подключён'))
+      return
+    }
+
+    const requestId = `embed-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+    const timeout = setTimeout(() => {
+      pendingEmbedRequests.delete(requestId)
+      reject(new Error('Таймаут эмбеддинга от Агента'))
+    }, timeoutMs)
+
+    pendingEmbedRequests.set(requestId, { resolve, reject, timeout })
+
+    io.to(agent.socketId).emit('embed:request', {
+      requestId,
+      text: request.text,
+      model: request.model,
+    })
+
+    console.log(`[WS] Sent embed request to ${agent.name}: ${requestId}`)
+  })
+}
+
 io.engine.on('connection_error', (err) => {
   console.error('[WS] Connection error:', err.message)
 })
@@ -176,4 +235,4 @@ server.listen(PORT, () => {
   console.log(`[WS] WebSocket server running on port ${PORT}`)
 })
 
-module.exports = { io, server, getAgentStatus, sendToAgent }
+module.exports = { io, server, getAgentStatus, sendToAgent, embedViaAgent }

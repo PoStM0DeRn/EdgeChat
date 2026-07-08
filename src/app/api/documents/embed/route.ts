@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getEmbedding } from '@/lib/embeddings'
 import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
+
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,16 +14,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { documentId, llmUrl, token, embedModel } = body as {
+    const { documentId, token, embedModel } = body as {
       documentId: string
-      llmUrl: string
       token?: string
       embedModel?: string
     }
 
-    if (!documentId || !llmUrl) {
+    if (!documentId) {
       return NextResponse.json(
-        { error: 'documentId и llmUrl обязательны' },
+        { error: 'documentId обязателен' },
+        { status: 400 }
+      )
+    }
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Токен агента обязателен для векторизации' },
         { status: 400 }
       )
     }
@@ -50,12 +57,27 @@ export async function POST(req: NextRequest) {
 
     for (const chunk of doc.chunks) {
       try {
-        const embedding = await getEmbedding(
-          chunk.content,
-          llmUrl,
-          token,
-          embedModel || 'nomic-embed-text'
-        )
+        const res = await fetch(`${WS_SERVER_URL}/api/agent/embed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            text: chunk.content,
+            model: embedModel || 'nomic-embed-text',
+          }),
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || `WS server error ${res.status}`)
+        }
+
+        const { embedding } = await res.json()
+
+        if (!embedding || !Array.isArray(embedding)) {
+          throw new Error('Неверный формат эмбеддинга')
+        }
+
         await db.documentChunk.update({
           where: { id: chunk.id },
           data: { embedding: JSON.stringify(embedding) },

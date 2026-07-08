@@ -783,7 +783,7 @@ export function ChatPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             documentId: docId,
-            token: settings.token || undefined,
+            token: settings.agentToken || undefined,
             embedModel: settings.embedModel || 'nomic-embed-text',
           }),
         })
@@ -801,7 +801,7 @@ export function ChatPage() {
         setEmbeddingDocId(null)
       }
     },
-    [settings.token, settings.embedModel, loadDocuments]
+    [settings.agentToken, settings.embedModel, loadDocuments]
   )
 
   // Delete document

@@ -182,6 +182,11 @@ function connect(saasUrl, agentToken, agentName) {
     handleChatRequest(data)
   })
 
+  socket.on('embed:request', async (data) => {
+    console.log('Embed request received:', data.requestId)
+    handleEmbedRequest(data)
+  })
+
   socket.on('disconnect', (reason) => {
     isConnected = false
     currentStatus = { online: false, name: agentName || 'My PC' }
@@ -312,6 +317,76 @@ async function handleChatRequest(data) {
     console.error('Chat request error:', err.message)
     socket?.emit('chat:stream', { requestId, done: true })
   }
+}
+
+async function handleEmbedRequest(data) {
+  const { requestId, text, model } = data
+  const config = loadConfig()
+  const lmstudioUrl = config.lmstudioUrl || LMSTUDIO_URL
+  const embedModel = model || 'nomic-embed-text'
+
+  console.log(`Embed request: model=${embedModel} @ ${lmstudioUrl}`)
+
+  try {
+    const url = new URL(lmstudioUrl)
+
+    // Try Ollama native endpoint first
+    try {
+      const postData = JSON.stringify({ model: embedModel, prompt: text })
+      const result = await httpRequest({
+        hostname: url.hostname,
+        port: url.port || 1234,
+        path: '/api/embeddings',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) },
+      }, postData)
+      const json = JSON.parse(result)
+      if (json.embedding && Array.isArray(json.embedding)) {
+        socket?.emit('embed:result', { requestId, embedding: json.embedding })
+        return
+      }
+    } catch {}
+
+    // Try OpenAI-compatible endpoint
+    const postData = JSON.stringify({ model: embedModel, input: text })
+    const result = await httpRequest({
+      hostname: url.hostname,
+      port: url.port || 1234,
+      path: '/v1/embeddings',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) },
+    }, postData)
+    const json = JSON.parse(result)
+    if (json.data?.[0]?.embedding) {
+      socket?.emit('embed:result', { requestId, embedding: json.data[0].embedding })
+      return
+    }
+
+    socket?.emit('embed:result', { requestId, error: 'Не удалось получить эмбеддинги' })
+  } catch (err) {
+    console.error('Embed request error:', err.message)
+    socket?.emit('embed:result', { requestId, error: err.message })
+  }
+}
+
+function httpRequest(options, postData) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      let data = ''
+      res.on('data', (chunk) => { data += chunk })
+      res.on('end', () => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode}: ${data}`))
+        } else {
+          resolve(data)
+        }
+      })
+    })
+    req.on('error', reject)
+    req.setTimeout(30000, () => { req.destroy(); reject(new Error('Timeout')) })
+    if (postData) req.write(postData)
+    req.end()
+  })
 }
 
 // IPC handlers from renderer
