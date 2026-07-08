@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { findRelevantChunks } from '@/lib/rag'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -13,6 +14,11 @@ interface ChatMessage {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getCurrentUser()
+    if (!userId) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
     const body = await req.json()
     const { messages, token, model, documentId, systemPrompt, agentToken } = body as {
       messages: ChatMessage[]
