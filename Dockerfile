@@ -8,7 +8,7 @@ COPY prisma/ ./prisma/
 RUN bunx prisma generate
 
 COPY . .
-RUN next build --no-turbopack && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/
+RUN bun run build
 
 
 FROM oven/bun:1-slim AS runner
