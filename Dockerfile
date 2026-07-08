@@ -10,6 +10,8 @@ RUN bunx prisma generate
 COPY . .
 RUN bun run build
 
+RUN mkdir -p /build/db && DATABASE_URL="file:/build/db/custom.db" ./node_modules/.bin/prisma db push --accept-data-loss
+
 
 FROM oven/bun:1-slim AS runner
 WORKDIR /app
@@ -20,11 +22,9 @@ COPY --from=builder /build/.next/standalone/ ./next-service-dist/
 COPY --from=builder /build/.next/static/ ./next-service-dist/.next/static/
 COPY --from=builder /build/public/ ./next-service-dist/public/
 
-COPY --from=builder /build/prisma/ ./prisma/
-COPY --from=builder /build/node_modules/prisma/ ./node_modules/prisma/
 COPY --from=builder /build/node_modules/@prisma/ ./node_modules/@prisma/
 COPY --from=builder /build/node_modules/.prisma/ ./node_modules/.prisma/
-COPY --from=builder /build/node_modules/.bin/ ./node_modules/.bin/
+COPY --from=builder /build/db/custom.db /app/db-init/custom.db
 
 COPY Caddyfile ./
 COPY docker-entrypoint.sh /app/entrypoint.sh

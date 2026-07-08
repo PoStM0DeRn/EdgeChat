@@ -10,9 +10,8 @@ export HOSTNAME="${HOSTNAME:-0.0.0.0}"
 DB_PATH="/app/db/custom.db"
 
 if [ ! -f "$DB_PATH" ]; then
-    echo "Initializing database..."
-    cd /app
-    ./node_modules/.bin/prisma db push --accept-data-loss && echo "Database initialized" || echo "Warning: DB init failed, continuing..."
+    cp /app/db-init/custom.db "$DB_PATH"
+    echo "Database initialized from template"
 fi
 
 cd /app/next-service-dist
