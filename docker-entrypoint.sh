@@ -12,7 +12,7 @@ DB_PATH="/app/db/custom.db"
 if [ ! -f "$DB_PATH" ]; then
     echo "Initializing database..."
     cd /app
-    bunx prisma db push --accept-data-loss && echo "Database initialized" || echo "Warning: DB init failed, continuing..."
+    ./node_modules/.bin/prisma db push --accept-data-loss && echo "Database initialized" || echo "Warning: DB init failed, continuing..."
 fi
 
 cd /app/next-service-dist
