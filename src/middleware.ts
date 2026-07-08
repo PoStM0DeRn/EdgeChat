@@ -14,6 +14,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!login|register|api/auth|_next|favicon.ico|globals.css).*)',
+    '/((?!login|register|landing|api/auth|_next|favicon.ico|globals.css).*)',
   ],
 }
