@@ -24,6 +24,7 @@ COPY --from=builder /build/prisma/ ./prisma/
 COPY --from=builder /build/node_modules/prisma/ ./node_modules/prisma/
 COPY --from=builder /build/node_modules/@prisma/ ./node_modules/@prisma/
 COPY --from=builder /build/node_modules/.prisma/ ./node_modules/.prisma/
+COPY --from=builder /build/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 COPY Caddyfile ./
 COPY docker-entrypoint.sh /app/entrypoint.sh
