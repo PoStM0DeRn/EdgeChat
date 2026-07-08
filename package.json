@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "dev:ws": "node server/ws-server.js 2>&1 | tee ws.log",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:ws\"",
-    "build": "next build --no-turbopack && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "next build --webpack && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "start:ws": "NODE_ENV=production node server/ws-server.js 2>&1 | tee ws.log",
     "lint": "eslint .",
