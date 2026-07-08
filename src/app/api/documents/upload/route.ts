@@ -5,6 +5,7 @@ import { chunkText } from '@/lib/chunker'
 import { join } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
@@ -13,6 +14,12 @@ export async function POST(req: NextRequest) {
     const userId = await getCurrentUser()
     if (!userId) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
+    const ip = getClientIp(req)
+    const rl = rateLimit(`upload:${ip}`, { windowMs: 3600_000, max: 10 })
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.resetMs)
     }
 
     const formData = await req.formData()

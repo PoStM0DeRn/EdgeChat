@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
+import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req)
+    const rl = rateLimit(`register:${ip}`, { windowMs: 3600_000, max: 5 })
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.resetMs)
+    }
+
     const { name, email, password } = await req.json()
 
     if (!email || !password) {
