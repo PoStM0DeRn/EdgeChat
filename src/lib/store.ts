@@ -198,7 +198,11 @@ export const useChatStore = create<ChatState>()(
     {
       name: 'leaky-chat-storage-v2',
       partialize: (state) => ({
-        settings: state.settings,
+        settings: {
+          token: state.settings.token,
+          model: state.settings.model,
+          embedModel: state.settings.embedModel,
+        },
         currentSessionId: state.currentSessionId,
         currentSessionTitle: state.currentSessionTitle,
         selectedDocumentId: state.selectedDocumentId,

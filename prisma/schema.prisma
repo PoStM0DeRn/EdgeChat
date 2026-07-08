@@ -76,19 +76,34 @@ model ChatMessage {
   @@index([sessionId])
 }
 
+model AgentToken {
+  id         String    @id @default(cuid())
+  token      String    @unique
+  userId     String
+  name       String    @default("Default Agent")
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
   password      String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime      @default(now())
   accounts      Account[]
   sessions      Session[]
   chatSessions  ChatSession[]
   documents     Document[]
   prompts       Prompt[]
+  agentTokens   AgentToken[]
 }
 
 model Account {

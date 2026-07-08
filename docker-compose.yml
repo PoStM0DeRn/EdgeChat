@@ -30,6 +30,7 @@ services:
       - ./server:/ws:ro
     environment:
       - WS_PORT=3002
+      - SAAS_URL=http://app:3000
     restart: unless-stopped
 
 volumes:

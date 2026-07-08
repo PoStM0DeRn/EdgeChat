@@ -2,6 +2,23 @@ const { Server } = require('socket.io')
 const http = require('http')
 
 const PORT = process.env.WS_PORT || 3002
+const SAAS_URL = process.env.SAAS_URL || 'http://localhost:3000'
+
+async function verifyAgentToken(token) {
+  try {
+    const res = await fetch(`${SAAS_URL}/api/agent/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+      signal: AbortSignal.timeout(5000),
+    })
+    const data = await res.json()
+    return data
+  } catch (err) {
+    console.error('[WS] Token verification failed:', err.message)
+    return { valid: false }
+  }
+}
 
 const server = http.createServer((req, res) => {
   if (req.url === '/health') {
@@ -82,10 +99,17 @@ const pendingEmbedRequests = new Map()
 io.on('connection', (socket) => {
   console.log(`[WS] New connection: ${socket.id}`)
 
-  socket.on('agent:connect', (data) => {
+  socket.on('agent:connect', async (data) => {
     const { token, name } = data
     if (!token) {
       socket.emit('agent:error', { error: 'Токен обязателен' })
+      return
+    }
+
+    const verification = await verifyAgentToken(token)
+    if (!verification.valid) {
+      console.log(`[WS] Agent rejected: invalid token (${token.slice(0, 8)}...)`)
+      socket.emit('agent:error', { error: 'Неверный или отозванный токен' })
       return
     }
 
@@ -93,12 +117,14 @@ io.on('connection', (socket) => {
       socketId: socket.id,
       name: name || 'Unknown Agent',
       token,
+      userId: verification.userId,
+      tokenName: verification.tokenName,
       connectedAt: Date.now(),
       lastHeartbeat: Date.now(),
     })
     socketToToken.set(socket.id, token)
 
-    console.log(`[WS] Agent connected: ${name} (${token.slice(0, 8)}...)`)
+    console.log(`[WS] Agent connected: ${name} (${verification.tokenName}) user=${verification.userId.slice(0, 8)}...`)
     socket.emit('agent:connected', { ok: true })
     io.emit('agent:status', { online: true, name })
   })

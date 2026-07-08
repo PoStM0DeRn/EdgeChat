@@ -47,6 +47,9 @@ import {
   ChevronDown,
   Download,
   Search,
+  Key,
+  Copy,
+  RefreshCw,
 } from 'lucide-react'
 
 export function ChatPage() {
@@ -97,6 +100,11 @@ export function ChatPage() {
   const [newPromptContent, setNewPromptContent] = useState('')
   const [isResizing, setIsResizing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [agentTokens, setAgentTokens] = useState<Array<{ id: string; name: string; isActive: boolean; lastUsedAt: string | null; createdAt: string }>>([])
+  const [newTokenValue, setNewTokenValue] = useState<string | null>(null)
+  const [newTokenName, setNewTokenName] = useState('')
+  const [tokenLoading, setTokenLoading] = useState(false)
+  const [copiedToken, setCopiedToken] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -162,6 +170,11 @@ export function ChatPage() {
     }
   }, [])
 
+  // Load agent tokens on mount
+  useEffect(() => {
+    loadAgentTokens()
+  }, [])
+
   const loadDocuments = useCallback(async () => {
     try {
       const res = await fetch('/api/documents')
@@ -185,6 +198,70 @@ export function ChatPage() {
       console.error('Failed to load prompts:', err)
     }
   }, [setPrompts])
+
+  // Agent token management
+  const loadAgentTokens = useCallback(async () => {
+    try {
+      const res = await fetch('/api/agent/tokens')
+      if (res.ok) {
+        const data = await res.json()
+        setAgentTokens(data)
+      }
+    } catch (err) {
+      console.error('Failed to load agent tokens:', err)
+    }
+  }, [])
+
+  const generateAgentToken = useCallback(async () => {
+    setTokenLoading(true)
+    try {
+      const res = await fetch('/api/agent/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newTokenName || undefined }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setNewTokenValue(data.token)
+        setSettings({ agentToken: data.token })
+        setNewTokenName('')
+        await loadAgentTokens()
+      }
+    } catch (err) {
+      console.error('Failed to generate token:', err)
+    } finally {
+      setTokenLoading(false)
+    }
+  }, [newTokenName, setSettings, loadAgentTokens])
+
+  const revokeAgentToken = useCallback(async (tokenId: string) => {
+    try {
+      const res = await fetch(`/api/agent/tokens/${tokenId}`, { method: 'DELETE' })
+      if (res.ok) {
+        await loadAgentTokens()
+      }
+    } catch (err) {
+      console.error('Failed to revoke token:', err)
+    }
+  }, [loadAgentTokens])
+
+  const copyTokenToClipboard = useCallback(async (token: string) => {
+    try {
+      await navigator.clipboard.writeText(token)
+      setCopiedToken(true)
+      setTimeout(() => setCopiedToken(false), 2000)
+    } catch {
+      // Fallback
+      const el = document.createElement('textarea')
+      el.value = token
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      setCopiedToken(true)
+      setTimeout(() => setCopiedToken(false), 2000)
+    }
+  }, [])
 
   // Load sessions
   const loadSessions = useCallback(async () => {
@@ -1180,25 +1257,112 @@ export function ChatPage() {
                   </div>
                 </div>
 
-                {/* Agent Token */}
-                <div className="space-y-2">
-                  <Label htmlFor="agent-token" className="text-sm font-medium">
+                {/* Agent Token Management */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
                     <span className="flex items-center gap-1.5">
-                      <Shield className="h-3.5 w-3.5" />
-                      Токен Агента
+                      <Key className="h-3.5 w-3.5" />
+                      Токены Агента
                     </span>
                   </Label>
-                  <Input
-                    id="agent-token"
-                    type="password"
-                    placeholder="Вставьте токен из приложения Агента"
-                    value={settings.agentToken}
-                    onChange={(e) =>
-                      setSettings({ agentToken: e.target.value })
-                    }
-                  />
+
+                  {/* Existing tokens */}
+                  {agentTokens.length > 0 && (
+                    <div className="space-y-2">
+                      {agentTokens.map((t) => (
+                        <div key={t.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${t.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                            <span className="truncate font-medium">{t.name}</span>
+                            {t.lastUsedAt && (
+                              <span className="text-muted-foreground shrink-0">
+                                {new Date(t.lastUsedAt).toLocaleDateString('ru-RU')}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-destructive hover:text-destructive shrink-0"
+                            onClick={() => revokeAgentToken(t.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Generated token display */}
+                  {newTokenValue && (
+                    <div className="p-3 rounded-md border border-green-500/30 bg-green-500/5 space-y-2">
+                      <p className="text-xs font-medium text-green-600 dark:text-green-400">
+                        Новый токен создан. Скопируйте его — он больше не будет показан!
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs break-all bg-background p-1.5 rounded border font-mono">
+                          {newTokenValue}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 shrink-0"
+                          onClick={() => copyTokenToClipboard(newTokenValue)}
+                        >
+                          {copiedToken ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={() => setNewTokenValue(null)}
+                      >
+                        Закрыть
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Generate new token */}
+                  {!newTokenValue && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Имя (опционально)"
+                        value={newTokenName}
+                        onChange={(e) => setNewTokenName(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 shrink-0"
+                        onClick={generateAgentToken}
+                        disabled={tokenLoading}
+                      >
+                        {tokenLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Manual paste for existing token */}
+                  {!newTokenValue && (
+                    <div className="space-y-1">
+                      <Input
+                        id="agent-token"
+                        type="password"
+                        placeholder="Или вставьте токен вручную"
+                        value={settings.agentToken}
+                        onChange={(e) =>
+                          setSettings({ agentToken: e.target.value })
+                        }
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground">
-                    Получите токен при запуске Desktop-Агента
+                    Скопируйте токен и вставьте в Desktop-Агент
                   </p>
                 </div>
 
