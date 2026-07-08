@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { findRelevantChunks } from '@/lib/rag'
 
 export const runtime = 'nodejs'
 
@@ -33,19 +34,24 @@ export async function POST(req: NextRequest) {
     // Build system prompt
     let contextBlock = ''
 
-    // RAG: if document is selected, use first 3 chunks as context
+    // RAG: if document is selected, find relevant chunks via similarity search
     if (documentId) {
       try {
-        const doc = await db.document.findUnique({
-          where: { id: documentId },
-          include: { chunks: true },
-        })
+        const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
 
-        if (doc && doc.chunks.length > 0) {
-          const relevantChunks = doc.chunks.slice(0, 3)
+        if (lastUserMessage) {
+          const doc = await db.document.findUnique({
+            where: { id: documentId },
+            select: { chunkCount: true },
+          })
+          const chunkCount = doc?.chunkCount || 0
+          const dynamicTopK = Math.min(Math.max(5, Math.ceil(chunkCount * 0.15)), 10)
+
+          const relevantChunks = await findRelevantChunks(documentId, lastUserMessage, agentToken, dynamicTopK)
+
           if (relevantChunks.length > 0) {
             contextBlock = '\n\n--- КОНТЕКСТ ИЗ ДОКУМЕНТА ---\n' +
-              relevantChunks.map((c, i) => `[${i + 1}] ${c.content}`).join('\n\n') +
+              relevantChunks.map((c, i) => `[Пункт ${i + 1} (чанк ${c.chunkIndex + 1})] ${c.content}`).join('\n\n') +
               '\n--- КОНЕЦ КОНТЕКСТА ---\n'
           }
         }
