@@ -965,7 +965,7 @@ export function ChatPage() {
   const selectedPrompt = prompts.find((p) => p.id === selectedPromptId)
 
   return (
-    <div className="flex h-screen flex-col bg-background overflow-hidden">
+    <div className="flex h-dvh flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between border-b px-4 py-3 bg-card shrink-0">
           <div className="flex items-center gap-3">
