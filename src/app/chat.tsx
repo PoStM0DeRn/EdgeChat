@@ -100,7 +100,8 @@ export function ChatPage() {
   const [newPromptContent, setNewPromptContent] = useState('')
   const [isResizing, setIsResizing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [agentTokens, setAgentTokens] = useState<Array<{ id: string; name: string; isActive: boolean; lastUsedAt: string | null; createdAt: string }>>([])
+  const [agentTokens, setAgentTokens] = useState<Array<{ id: string; token: string; name: string; isActive: boolean; lastUsedAt: string | null; createdAt: string }>>([])
+  const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set())
   const [newTokenValue, setNewTokenValue] = useState<string | null>(null)
   const [newTokenName, setNewTokenName] = useState('')
   const [tokenLoading, setTokenLoading] = useState(false)
@@ -1269,27 +1270,60 @@ export function ChatPage() {
                   {/* Existing tokens */}
                   {agentTokens.length > 0 && (
                     <div className="space-y-2">
-                      {agentTokens.map((t) => (
-                        <div key={t.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${t.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
-                            <span className="truncate font-medium">{t.name}</span>
-                            {t.lastUsedAt && (
-                              <span className="text-muted-foreground shrink-0">
-                                {new Date(t.lastUsedAt).toLocaleDateString('ru-RU')}
-                              </span>
+                      {agentTokens.map((t) => {
+                        const isVisible = visibleTokens.has(t.id)
+                        return (
+                          <div key={t.id} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${t.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <span className="truncate font-medium">{t.name}</span>
+                                {t.lastUsedAt && (
+                                  <span className="text-muted-foreground shrink-0">
+                                    {new Date(t.lastUsedAt).toLocaleDateString('ru-RU')}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2"
+                                  onClick={() => {
+                                    const next = new Set(visibleTokens)
+                                    if (isVisible) next.delete(t.id)
+                                    else next.add(t.id)
+                                    setVisibleTokens(next)
+                                  }}
+                                >
+                                  {isVisible ? <X className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2"
+                                  onClick={() => copyTokenToClipboard(t.token)}
+                                >
+                                  {copiedToken ? <CheckCircle2 className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-destructive hover:text-destructive"
+                                  onClick={() => revokeAgentToken(t.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            {isVisible && (
+                              <code className="block text-xs break-all bg-background p-1.5 rounded border font-mono mx-2">
+                                {t.token}
+                              </code>
                             )}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-destructive hover:text-destructive shrink-0"
-                            onClick={() => revokeAgentToken(t.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
 

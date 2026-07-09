@@ -19,6 +19,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        token: true,
         name: true,
         isActive: true,
         lastUsedAt: true,
