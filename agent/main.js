@@ -199,6 +199,11 @@ function connect(saasUrl, agentToken, agentName) {
   })
 
   socket.on('disconnect', (reason) => {
+    // Don't update UI during transport upgrades or server-initiated reconnects
+    if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
+      console.log('Disconnect (will reconnect):', reason)
+      return
+    }
     isConnected = false
     currentStatus = { online: false, name: agentName || 'My PC' }
     mainWindow?.webContents.send('status', currentStatus)
@@ -216,12 +221,13 @@ function connect(saasUrl, agentToken, agentName) {
     if (reconnectAttempt === 1 || reconnectAttempt % 5 === 0) {
       console.warn(`Connection attempt ${reconnectAttempt}: ${err.message}`)
     }
-    mainWindow?.webContents.send('status', {
-      online: false,
-      error: reconnectAttempt <= 3
-        ? `Ошибка подключения: ${err.message}`
-        : `Переподключение... (попытка ${reconnectAttempt})`,
-    })
+    // Don't spam UI during transport upgrades — only show on first 3 attempts
+    if (reconnectAttempt <= 3 && !isConnected) {
+      mainWindow?.webContents.send('status', {
+        online: false,
+        error: `Ошибка подключения: ${err.message}`,
+      })
+    }
   })
 }
 

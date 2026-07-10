@@ -88,7 +88,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
   },
   pingInterval: 25_000,
-  pingTimeout: 10_000,
+  pingTimeout: 30_000,
 })
 
 const agents = new Map()
@@ -189,7 +189,7 @@ io.on('connection', (socket) => {
 function getAgentStatus(token) {
   const agent = agents.get(token)
   if (!agent) return { online: false, name: null }
-  const isStale = Date.now() - agent.lastHeartbeat > 35_000
+  const isStale = Date.now() - agent.lastHeartbeat > 60_000
   return { online: !isStale, name: agent.name }
 }
 
@@ -197,7 +197,7 @@ function sendToAgent(token, request, timeoutMs = 120_000) {
   return new Promise((resolve, reject) => {
     const agent = agents.get(token)
     console.log(`[WS] sendToAgent: token=${token.slice(0, 8)}... found=${!!agent}`)
-    if (!agent || Date.now() - agent.lastHeartbeat > 35_000) {
+    if (!agent || Date.now() - agent.lastHeartbeat > 60_000) {
       reject(new Error('Агент не подключён'))
       return
     }
@@ -228,7 +228,7 @@ function sendToAgent(token, request, timeoutMs = 120_000) {
 function embedViaAgent(token, request, timeoutMs = 60_000) {
   return new Promise((resolve, reject) => {
     const agent = agents.get(token)
-    if (!agent || Date.now() - agent.lastHeartbeat > 35_000) {
+    if (!agent || Date.now() - agent.lastHeartbeat > 60_000) {
       reject(new Error('Агент не подключён'))
       return
     }
