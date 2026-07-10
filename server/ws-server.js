@@ -135,7 +135,6 @@ io.on('connection', (socket) => {
       const agent = agents.get(token)
       if (agent) {
         agent.lastHeartbeat = Date.now()
-        console.log(`[WS] Heartbeat from ${agent.name}`)
       }
     }
   })

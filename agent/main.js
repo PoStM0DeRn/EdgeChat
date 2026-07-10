@@ -133,17 +133,29 @@ function connect(saasUrl, agentToken, agentName) {
     socket.disconnect()
   }
 
-  const wsUrl = saasUrl.replace(/\/+$/, '').replace(/:\d+$/, '') + ':3002'
+  // Build WS URL: extract host from saasUrl, append port 3002
+  let wsUrl
+  try {
+    const parsed = new URL(saasUrl)
+    wsUrl = `${parsed.protocol}//${parsed.hostname}:3002`
+  } catch {
+    // Fallback: strip path, keep host
+    wsUrl = saasUrl.replace(/\/+$/, '').replace(/:\d+$/, '').replace(/\/.*$/, '') + ':3002'
+  }
+
+  let reconnectAttempt = 0
 
   socket = io(wsUrl, {
-    transports: ['websocket'],
+    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 2000,
     reconnectionDelayMax: 10000,
+    timeout: 10000,
   })
 
   socket.on('connect', () => {
+    reconnectAttempt = 0
     console.log('Connected to server:', wsUrl)
     socket.emit('agent:connect', {
       token: agentToken,
@@ -163,7 +175,6 @@ function connect(saasUrl, agentToken, agentName) {
       heartbeatInterval = setInterval(() => {
         if (socket?.connected) {
           socket.emit('agent:heartbeat')
-          console.log('Heartbeat sent')
         }
       }, 5000)
     }
@@ -192,14 +203,24 @@ function connect(saasUrl, agentToken, agentName) {
     currentStatus = { online: false, name: agentName || 'My PC' }
     mainWindow?.webContents.send('status', currentStatus)
     updateTrayMenu()
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval)
+      heartbeatInterval = null
+    }
     console.log('Disconnected:', reason)
   })
 
   socket.on('connect_error', (err) => {
-    console.error('Connection error:', err.message)
+    reconnectAttempt++
+    // Only log first attempt and every 5th as warning, not error
+    if (reconnectAttempt === 1 || reconnectAttempt % 5 === 0) {
+      console.warn(`Connection attempt ${reconnectAttempt}: ${err.message}`)
+    }
     mainWindow?.webContents.send('status', {
       online: false,
-      error: `Ошибка подключения: ${err.message}`,
+      error: reconnectAttempt <= 3
+        ? `Ошибка подключения: ${err.message}`
+        : `Переподключение... (попытка ${reconnectAttempt})`,
     })
   })
 }
