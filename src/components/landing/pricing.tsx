@@ -2,6 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
 
@@ -10,7 +13,41 @@ interface PricingProps {
 }
 
 export function Pricing({ locale }: PricingProps) {
+  const router = useRouter()
+  const { data: session } = useSession()
+  const [loading, setLoading] = useState<string | null>(null)
   const text = t(locale).pricing
+
+  const handleProClick = async () => {
+    if (!session) {
+      router.push('/register')
+      return
+    }
+    setLoading('pro-monthly')
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ billing: 'monthly' }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch {
+      console.error('Checkout failed')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleFreeClick = () => {
+    if (!session) {
+      router.push('/register')
+    } else {
+      router.push('/')
+    }
+  }
 
   return (
     <section id="pricing" className="py-24 px-4">
@@ -19,7 +56,7 @@ export function Pricing({ locale }: PricingProps) {
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{text.title}</h2>
           <p className="mt-2 text-muted-foreground">{text.subtitle}</p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
           {text.plans.map((plan) => (
             <div
               key={plan.name}
@@ -53,8 +90,10 @@ export function Pricing({ locale }: PricingProps) {
               <Button
                 className="w-full"
                 variant={plan.popular ? 'default' : 'outline'}
+                onClick={plan.popular ? handleProClick : handleFreeClick}
+                disabled={loading === 'pro-monthly'}
               >
-                {plan.cta}
+                {loading === 'pro-monthly' && plan.popular ? 'Загрузка...' : plan.cta}
               </Button>
             </div>
           ))}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth-helpers'
+import { checkLimit } from '@/lib/plan-limits'
 
 export const runtime = 'nodejs'
 
@@ -42,6 +43,14 @@ export async function POST(req: NextRequest) {
     const userId = await getCurrentUser()
     if (!userId) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
+    }
+
+    const limit = await checkLimit(userId, 'sessions')
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: `Лимит сессий: ${limit.limit}. Удалите старые или оформите Pro.` },
+        { status: 403 }
+      )
     }
 
     const body = await req.json()

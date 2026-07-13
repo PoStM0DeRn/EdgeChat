@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { findRelevantChunks } from '@/lib/rag'
-import { getCurrentUser } from '@/lib/auth-helpers'
+import { getCurrentUser, getCurrentUserPlan } from '@/lib/auth-helpers'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+import { PLAN_LIMITS } from '@/lib/plan-limits'
 
 export const runtime = 'nodejs'
 
@@ -20,8 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
     }
 
+    const plan = await getCurrentUserPlan()
+    const maxRequests = PLAN_LIMITS[plan].chatRateLimit
     const ip = getClientIp(req)
-    const rl = rateLimit(`chat:${ip}`, { windowMs: 60_000, max: 30 })
+    const rl = rateLimit(`chat:${ip}`, { windowMs: 60_000, max: maxRequests })
     if (!rl.allowed) {
       return rateLimitResponse(rl.resetMs)
     }

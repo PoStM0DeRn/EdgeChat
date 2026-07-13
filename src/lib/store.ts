@@ -51,6 +51,12 @@ interface ChatState {
   settings: Settings
   setSettings: (settings: Partial<Settings>) => void
 
+  // User / Plan
+  plan: string
+  setPlan: (plan: string) => void
+  subscriptionEndsAt: string | null
+  setSubscriptionEndsAt: (date: string | null) => void
+
   // Chat
   messages: Message[]
   isStreaming: boolean
@@ -110,6 +116,12 @@ export const useChatStore = create<ChatState>()(
         set((state) => ({
           settings: { ...state.settings, ...partial },
         })),
+
+      // User / Plan
+      plan: 'free',
+      setPlan: (plan) => set({ plan }),
+      subscriptionEndsAt: null,
+      setSubscriptionEndsAt: (date) => set({ subscriptionEndsAt: date }),
 
       // Chat
       messages: [],
@@ -202,6 +214,7 @@ export const useChatStore = create<ChatState>()(
           token: state.settings.token,
           model: state.settings.model,
           embedModel: state.settings.embedModel,
+          agentToken: state.settings.agentToken,
         },
         currentSessionId: state.currentSessionId,
         currentSessionTitle: state.currentSessionTitle,

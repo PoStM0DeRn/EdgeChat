@@ -91,19 +91,23 @@ model AgentToken {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String?       @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  createdAt     DateTime      @default(now())
-  accounts      Account[]
-  sessions      Session[]
-  chatSessions  ChatSession[]
-  documents     Document[]
-  prompts       Prompt[]
-  agentTokens   AgentToken[]
+  id                   String        @id @default(cuid())
+  name                 String?
+  email                String?       @unique
+  emailVerified        DateTime?
+  image                String?
+  password             String?
+  plan                 String        @default("free") // "free" | "pro"
+  stripeCustomerId     String?       @unique
+  stripeSubscriptionId String?
+  subscriptionEndsAt   DateTime?
+  createdAt            DateTime      @default(now())
+  accounts             Account[]
+  sessions             Session[]
+  chatSessions         ChatSession[]
+  documents            Document[]
+  prompts              Prompt[]
+  agentTokens          AgentToken[]
 }
 
 model Account {

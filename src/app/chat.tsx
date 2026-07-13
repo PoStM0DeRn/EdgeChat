@@ -106,6 +106,8 @@ export function ChatPage() {
   const [newTokenName, setNewTokenName] = useState('')
   const [tokenLoading, setTokenLoading] = useState(false)
   const [copiedToken, setCopiedToken] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('free')
+  const [subscriptionEndsAt, setSubEndsAt] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -169,6 +171,17 @@ export function ChatPage() {
     if (currentSessionId) {
       loadSessionMessages(currentSessionId)
     }
+  }, [])
+
+  // Load plan on mount
+  useEffect(() => {
+    fetch('/api/stripe/status')
+      .then(r => r.json())
+      .then(data => {
+        setUserPlan(data.plan || 'free')
+        setSubEndsAt(data.subscriptionEndsAt || null)
+      })
+      .catch(() => {})
   }, [])
 
   // Load agent tokens on mount
@@ -1054,6 +1067,18 @@ export function ChatPage() {
           </div>
           {session?.user && (
             <div className="flex items-center gap-2">
+              {userPlan === 'pro' ? (
+                <span className="text-xs font-medium text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-200 dark:border-green-800">
+                  Pro
+                </span>
+              ) : (
+                <button
+                  onClick={() => window.open('/landing#pricing', '_self')}
+                  className="text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors"
+                >
+                  Free
+                </button>
+              )}
               <span className="hidden sm:inline text-xs text-muted-foreground">
                 {session.user.name || session.user.email}
               </span>
