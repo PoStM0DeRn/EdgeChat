@@ -4,12 +4,12 @@ services:
     env_file:
       - .env
     ports:
-      - "3001:81"
+      - "127.0.0.1:3000:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
       - DATABASE_URL=file:/app/db/custom.db
-      - WS_SERVER_URL=http://host.docker.internal:3002
+      - WS_SERVER_URL=http://ws-server:3002
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
@@ -21,18 +21,31 @@ services:
     restart: unless-stopped
 
   ws-server:
-    image: node:20-slim
-    working_dir: /ws
-    command: sh -c "npm init -y && npm install socket.io && node ws-server.js"
+    build:
+      context: ./server
+      dockerfile: Dockerfile.ws
     ports:
-      - "3002:3002"
-    volumes:
-      - ./server:/ws:ro
+      - "127.0.0.1:3002:3002"
     environment:
       - WS_PORT=3002
       - SAAS_URL=http://app:3000
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
 volumes:
   db-data:
   uploads-data:
+  caddy-data:
+  caddy-config:

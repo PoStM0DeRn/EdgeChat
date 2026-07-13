@@ -1,0 +1,8 @@
+{
+  "name": "edgechat-ws-server",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "socket.io": "^4.8.0"
+  }
+}

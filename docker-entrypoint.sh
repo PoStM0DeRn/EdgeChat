@@ -16,9 +16,4 @@ fi
 
 cd /app/next-service-dist
 echo "Starting Next.js..."
-bun server.js &
-NEXT_PID=$!
-
-cd /app
-echo "Starting Caddy..."
-exec caddy run --config Caddyfile --adapter caddyfile
+exec node server.js

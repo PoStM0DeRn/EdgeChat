@@ -1,22 +1,21 @@
-FROM oven/bun:1 AS builder
+FROM node:20-alpine AS builder
 WORKDIR /build
 
-COPY package.json bun.lock ./
-RUN bun install
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY prisma/ ./prisma/
-RUN bunx prisma generate
+RUN npx prisma generate
 
 COPY . .
-RUN bun run build
+RUN npm run build
 
-RUN mkdir -p /build/db && DATABASE_URL="file:/build/db/custom.db" ./node_modules/.bin/prisma db push --accept-data-loss
+RUN mkdir -p /build/db && DATABASE_URL="file:/build/db/custom.db" npx prisma db push --skip-generate
 
-
-FROM oven/bun:1-slim AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y caddy && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /app/db /app/uploads
 
 COPY --from=builder /build/.next/standalone/ ./next-service-dist/
 COPY --from=builder /build/.next/static/ ./next-service-dist/.next/static/
@@ -24,13 +23,12 @@ COPY --from=builder /build/public/ ./next-service-dist/public/
 
 COPY --from=builder /build/node_modules/@prisma/ ./node_modules/@prisma/
 COPY --from=builder /build/node_modules/.prisma/ ./node_modules/.prisma/
-COPY --from=builder /build/db/custom.db /app/db-init/custom.db
 
-COPY Caddyfile ./
+COPY --from=builder /build/db/custom.db /app/db-init/custom.db
+COPY --from=builder /build/node_modules/.cache/prisma/ /app/db-init/prisma-cache/
+
 COPY docker-entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-
-RUN mkdir -p /app/db /app/uploads
 
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -38,6 +36,6 @@ ENV HOSTNAME=0.0.0.0
 
 VOLUME ["/app/db", "/app/uploads"]
 
-EXPOSE 81 3000
+EXPOSE 3000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
