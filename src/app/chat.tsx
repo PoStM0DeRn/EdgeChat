@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useChatStore } from '@/lib/store'
+import { toast } from '@/hooks/use-toast'
 import { MarkdownMessage } from '@/components/chat/markdown-message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -182,6 +183,29 @@ export function ChatPage() {
         setSubEndsAt(data.subscriptionEndsAt || null)
       })
       .catch(() => {})
+  }, [])
+
+  // Poll for plan upgrade after successful checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('checkout') === 'success') {
+      toast({ title: 'Оплата прошла успешно', description: 'Активируем Pro-подписку…' })
+      // Clean URL without full reload
+      window.history.replaceState({}, '', window.location.pathname)
+      const poll = setInterval(async () => {
+        try {
+          const res = await fetch('/api/stripe/status')
+          const data = await res.json()
+          if (data.plan === 'pro') {
+            setUserPlan('pro')
+            setSubEndsAt(data.subscriptionEndsAt || null)
+            toast({ title: 'Pro-подписка активирована! 🎉' })
+            clearInterval(poll)
+          }
+        } catch { /* retry */ }
+      }, 2000)
+      setTimeout(() => clearInterval(poll), 30_000)
+    }
   }, [])
 
   // Load agent tokens on mount

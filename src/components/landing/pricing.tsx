@@ -74,7 +74,7 @@ export function Pricing({ locale }: PricingProps) {
             {text.monthly}
           </button>
           <button
-            onClick={() => setYearly(true)}
+            onClick={() => setYearly(!yearly)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${yearly ? 'bg-foreground' : 'bg-input'}`}
             role="switch"
             aria-checked={yearly}

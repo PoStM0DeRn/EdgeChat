@@ -4,6 +4,17 @@ import { db } from '@/lib/db'
 
 export const runtime = 'nodejs'
 
+function subscriptionEndsAt(sub: any): Date {
+  const ts = sub.current_period_end
+  if (ts && typeof ts === 'number') return new Date(ts * 1000)
+  const recurring = sub.items?.data?.[0]?.price?.recurring
+  const interval = recurring?.interval || 'month'
+  const count = recurring?.interval_count || 1
+  const anchor = sub.billing_cycle_anchor || sub.start_date || Math.floor(Date.now() / 1000)
+  const map: Record<string, number> = { day: 86400, week: 604800, month: 2592000, year: 31536000 }
+  return new Date((anchor + (map[interval] || 2592000) * count) * 1000)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.text()
@@ -38,7 +49,7 @@ export async function POST(req: NextRequest) {
             data: {
               plan: 'pro',
               stripeSubscriptionId: subscriptionId,
-              subscriptionEndsAt: new Date(subscription.current_period_end * 1000),
+              subscriptionEndsAt: subscriptionEndsAt(subscription),
             },
           })
         }
@@ -61,10 +72,10 @@ export async function POST(req: NextRequest) {
               data: {
                 plan: 'pro',
                 stripeSubscriptionId: subscription.id,
-                subscriptionEndsAt: new Date(subscription.current_period_end * 1000),
+                subscriptionEndsAt: subscriptionEndsAt(subscription),
               },
             })
-          } else {
+          } else if (status !== 'incomplete' && status !== 'incomplete_expired') {
             await db.user.update({
               where: { id: userId },
               data: {
