@@ -1,122 +1,151 @@
-# AGENTS.md — TunnelChat
+# AGENTS.md — EdgeChat
 
 ## What this is
 
-Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style).
-A chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) — no port forwarding needed.
+Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style) + Stripe. Chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) over Socket.IO. Free/Pro subscription system.
 
 ## Commands
 
 ```bash
 # Setup (required after fresh clone)
+npm install
 npx prisma generate
 npx prisma db push
 
-# Dev (SaaS only)
+# Dev — Next.js (port 3000)
 npx next dev -p 3000
 
-# Dev (SaaS + WebSocket server)
-npx next dev -p 3000    # Terminal 1
-node server/ws-server.js  # Terminal 2
+# Dev — WebSocket server (port 3002)
+node server/ws-server.js
 
-# Dev (Desktop Agent)
+# Dev — both at once
+npm run dev:all
+
+# Dev — Desktop Agent
 cd agent && npm install && npm start
 
-# Lint
-npx eslint src --ext .ts,.tsx
-
-# Build
+# Build (produces .next/standalone)
 npx next build
+
+# Production start (after build)
+node .next/standalone/server.js
+
+# DB schema change
+npx prisma db push
+
+# Lint (most rules off, rarely catches anything)
+npx eslint .
+
+# Docker deploy (VPS)
+docker compose up -d --build
 ```
 
 ## Architecture
 
-### SaaS (Next.js)
 ```
-src/
-  app/
-    page.tsx          # Server component — dynamic import wrapper (ssr: false)
-    chat.tsx          # Client component — THE main UI (~1900 lines, single-file)
-    layout.tsx        # Root layout with Toaster
-    globals.css       # Tailwind CSS 4 theme (light/dark via oklch)
-    api/
-      chat/route.ts       # POST — SSE proxy to LLM via Agent
-      agent/status/route.ts  # POST — check agent online status via WS server
-      documents/          # GET/DELETE + upload/route.ts (POST) + embed/route.ts (POST)
-      prompts/            # GET/POST + [id]/route.ts (PUT/DELETE)
-      sessions/           # GET/POST + [sessionId]/route.ts (GET/PUT/DELETE)
-        messages/         # POST + [messageId]/route.ts (DELETE)
-  components/
-    ui/                 # shadcn/ui components (New York style)
-    chat/
-      markdown-message.tsx  # Markdown renderer with thinking/content separation
-  lib/
-    store.ts            # Zustand store with persist middleware
-    db.ts               # PrismaClient singleton
-    agent-manager.ts    # Agent tracking singleton (used in dev)
-    chunker.ts          # Text chunking (~500 tokens, 100 overlap)
-    embeddings.ts       # Ollama + OpenAI-compatible embedding endpoints
-    pdf-parser.ts       # PDF/TXT/MD parsing via pdf2json
-    default-prompts.ts  # 6 Russian-language system prompts
-    utils.ts            # cn() helper (clsx + tailwind-merge)
-  hooks/
-    use-toast.ts        # Toast hook (client-side state, not Zustand)
-    use-mobile.ts       # Mobile detection hook
+Browser → POST /api/chat → Next.js → HTTP → WS Server :3002 → Socket.IO → Desktop Agent → Ollama/LM Studio
+                                                                    ↓
+Browser ← SSE stream ← Next.js ← HTTP ← WS Server ← Socket.IO ← Desktop Agent
 ```
 
-### WebSocket Server (port 3002)
+### SaaS (Next.js) — key files
 ```
-server/
-  ws-server.js         # Socket.IO server — bridges SaaS ↔ Desktop Agent
+src/
+  proxy.ts                    # NextAuth middleware (replaces deprecated middleware.ts)
+  app/
+    page.tsx                  # Dynamic import wrapper (ssr: false)
+    chat.tsx                  # ~1900-line single-file client UI
+    landing/page.tsx          # Marketing landing with pricing
+    api/
+      chat/route.ts           # POST — SSE proxy to LLM via Agent
+      stripe/                 # checkout, webhook, portal, status
+      agent/verify/route.ts   # Agent token validation (public)
+      agent/status/route.ts   # Agent online check (proxies to WS server)
+      agent/tokens/           # CRUD agent tokens (max depends on plan)
+  lib/
+    auth.ts                   # NextAuth config (Credentials provider, JWT)
+    auth-helpers.ts           # getCurrentUser(), getCurrentUserPlan()
+    store.ts                  # Zustand with persist middleware
+    plan-limits.ts            # Free/Pro limits + checkLimit()
+    stripe.ts                 # Stripe singleton + price IDs
+    db.ts                     # PrismaClient singleton
+    rag.ts                    # Hybrid search (60% keyword, 40% vector)
+    embeddings.ts             # Ollama/OpenAI-compatible embedding endpoints
+    chunker.ts                # ~500-token chunks with 100 overlap
+    pdf-parser.ts             # PDF/TXT/MD via pdf2json
+```
+
+### WebSocket Server (port 3002, standalone)
+```
+server/ws-server.js           # Socket.IO server, bridges SaaS ↔ Agent
+server/Dockerfile.ws          # Docker build for ws-server
 ```
 
 ### Desktop Agent (Electron)
 ```
-agent/
-  main.js              # Main process: WS connection + Ollama proxy
-  preload.js           # Context bridge (main ↔ renderer)
-  index.html           # Minimal UI with connection form + status
-  package.json         # Electron + socket.io-client
+agent/main.js                 # Socket.IO client + Ollama/LM Studio proxy
+agent/index.html              # Connection form + status UI
 ```
-
-## Agent Mode Flow
-
-```
-[Phone/SaaS UI] → POST /api/chat → [Next.js] → HTTP → [WS Server :3002] → Socket.IO → [Electron Agent]
-                                                                                                    ↓
-                                                                                              localhost:11434
-                                                                                                    ↓
-[Phone/SaaS UI] ← SSE stream ← [Next.js] ← HTTP ← [WS Server] ← Socket.IO ← [Electron Agent]
-```
-
-1. Desktop Agent starts → connects to SaaS via WebSocket
-2. User sends message in SaaS UI
-3. `/api/chat` sends request to WS server → forwarded to Agent
-4. Agent calls local LM Studio / Ollama → streams tokens back via WebSocket
-5. SaaS receives chunks → streams to client as SSE
 
 ## Key quirks
 
-- **TypeScript strict mode is on** but `ignoreBuildErrors: true` in next.config.ts.
-- **ESLint is very permissive** — most rules are turned off.
+- **TypeScript**: `strict: true` but `ignoreBuildErrors: true` in next.config.ts — TS errors won't block build.
+- **ESLint**: almost every rule is off (`eslint.config.mjs`). Don't rely on it.
+- **React strict mode**: off (`reactStrictMode: false`).
+- **Next.js output**: `output: "standalone"` — build produces `.next/standalone/` for Docker.
 - **All UI text is in Russian.** Do not translate.
-- **Prisma schema uses SQLite** with embeddings stored as JSON strings.
-- **The main chat UI is a single ~1900 line file** (`chat.tsx`).
-- **Thinking/Content separation**: Models like Qwen send `reasoning_content` separately from `content`. The proxy normalizes this into `{type: 'thinking', content}` and `{type: 'content', content}` SSE format.
-- **Ollama API has two formats** handled by the chat route:
+- **Prisma**: SQLite at `./db/custom.db`. Embeddings stored as JSON strings.
+- **chat.tsx** is a ~1900-line single-file client component. Refactoring planned.
+- **Thinking/Content separation**: models like Qwen send `reasoning_content` + `content`. The proxy normalizes to `{type:'thinking'|'content'}` SSE chunks.
+- **Ollama API has two formats** handled in the chat route:
   - `/api/chat` (Ollama native) — NDJSON
   - `/v1/chat/completions` (OpenAI-compatible) — SSE with `data:` prefix
+- **Free/Pro limits** defined in `src/lib/plan-limits.ts`. Enforced in `checkLimit()` called from document upload, session creation, agent token creation, and chat rate limiting.
+- **Stripe webhook** at `/api/stripe/webhook` handles subscription lifecycle. Without it, Pro plan never activates/cancels.
+- **Windows `npm run dev`**: uses bash pipe (`2>&1 | tee`). On Windows PowerShell, run `npx next dev -p 3000` directly.
+- **middleware.ts** was renamed to `proxy.ts` (Next.js 16 deprecation). File stays in `src/`.
 
 ## Database
 
-SQLite at `./db/custom.db`. Tables: Document, DocumentChunk, Prompt, ChatSession, ChatMessage.
-After schema changes: `npx prisma db push`.
+SQLite at `./db/custom.db`. Tables:
+- `User` — includes `plan` ("free"|"pro"), `stripeCustomerId`, `stripeSubscriptionId`, `subscriptionEndsAt`
+- `Document`, `DocumentChunk` — RAG documents with chunked text + vector embeddings
+- `Prompt` — system prompts (6 defaults seeded, custom per user)
+- `ChatSession`, `ChatMessage` — chat history
+- `AgentToken` — token auth for Desktop Agent
+- `Account`, `Session`, `VerificationToken` — NextAuth internals
+
+After schema changes: `npx prisma db push` (no migrations).
+
+## Docker deploy
+
+```bash
+docker compose up -d --build
+```
+
+Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy with auto-TLS via Let's Encrypt). Requires `.env` with `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and optional Stripe keys.
+
+## Environment variables
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `DATABASE_URL` | Yes | `file:./db/custom.db` locally, `file:/app/db/custom.db` in Docker |
+| `NEXTAUTH_SECRET` | Yes | ≥32 chars, use `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Yes | Your public URL or `http://localhost:3000` |
+| `WS_SERVER_URL` | Dev | Default `http://localhost:3002` |
+| `STRIPE_SECRET_KEY` | Pro | From Stripe Dashboard |
+| `STRIPE_WEBHOOK_SECRET` | Pro | From Stripe Dashboard webhook settings |
+| `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | Pro | Stripe price ID for $5/mo |
+| `NEXT_PUBLIC_STRIPE_PRICE_YEARLY` | Pro | Stripe price ID for $50/yr |
 
 ## Files that matter most
 
 1. `src/app/chat.tsx` — the entire client UI
-2. `src/app/api/chat/route.ts` — the LLM proxy (agent mode)
+2. `src/app/api/chat/route.ts` — LLM proxy (agent mode)
 3. `src/lib/store.ts` — Zustand state
-4. `server/ws-server.js` — WebSocket bridge server
-5. `agent/main.js` — Desktop Agent core logic
-6. `prisma/schema.prisma` — database schema
+4. `src/lib/auth.ts` — NextAuth config (plan in JWT)
+5. `src/lib/plan-limits.ts` — Free/Pro limits
+6. `src/proxy.ts` — auth middleware
+7. `server/ws-server.js` — WebSocket bridge server
+8. `agent/main.js` — Desktop Agent core logic
+9. `prisma/schema.prisma` — database schema
