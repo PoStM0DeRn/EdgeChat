@@ -77,11 +77,14 @@ const translations = {
     pricing: {
       title: 'Тарифы',
       subtitle: 'Выберите план под свои задачи',
+      monthly: 'Ежемесячно',
+      yearly: 'Ежегодно',
+      savePercent: 'скидка {p}%',
       plans: [
         {
           name: 'Free',
           price: '$0',
-          period: '/мес',
+          period: '',
           description: 'Для ознакомления',
           features: ['10 документов', '30 сессий', '3 токена агента', 'Кастомные промпты'],
           cta: 'Начать бесплатно',
@@ -89,8 +92,10 @@ const translations = {
         },
         {
           name: 'Pro',
-          price: '$5',
-          period: '/мес',
+          priceMonthly: '$5',
+          priceYearly: '$50',
+          periodMonthly: '/мес',
+          periodYearly: '/год',
           description: 'Для профессионалов',
           features: ['50 документов', 'Безлимитные сессии', '10 токенов агента', 'Кастомные промпты', 'Повышенный лимит запросов'],
           cta: 'Выбрать Pro',
@@ -219,11 +224,14 @@ const translations = {
     pricing: {
       title: 'Pricing',
       subtitle: 'Choose a plan that fits your needs',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+      savePercent: 'save {p}%',
       plans: [
         {
           name: 'Free',
           price: '$0',
-          period: '/mo',
+          period: '',
           description: 'For getting started',
           features: ['10 documents', '30 sessions', '3 agent tokens', 'Custom prompts'],
           cta: 'Get Started Free',
@@ -231,8 +239,10 @@ const translations = {
         },
         {
           name: 'Pro',
-          price: '$5',
-          period: '/mo',
+          priceMonthly: '$5',
+          priceYearly: '$50',
+          periodMonthly: '/mo',
+          periodYearly: '/yr',
           description: 'For professionals',
           features: ['50 documents', 'Unlimited sessions', '10 agent tokens', 'Custom prompts', 'Higher rate limits'],
           cta: 'Choose Pro',
