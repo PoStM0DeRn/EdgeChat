@@ -22,8 +22,8 @@ services:
 
   ws-server:
     build:
-      context: ./server
-      dockerfile: Dockerfile.ws
+      context: .
+      dockerfile: server/Dockerfile.ws
     ports:
       - "127.0.0.1:3002:3002"
     environment:
