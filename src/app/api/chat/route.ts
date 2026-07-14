@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { findRelevantChunks } from '@/lib/rag'
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
     // ═══════════════════════════════════════════
     // Forward request to Desktop Agent via WebSocket
     // ═══════════════════════════════════════════
-    const requestId = crypto.randomUUID()
+    const requestId = randomUUID()
 
     try {
       const wsResponse = await fetch(`${WS_SERVER_URL}/api/agent/chat`, {

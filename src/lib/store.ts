@@ -130,7 +130,7 @@ export const useChatStore = create<ChatState>()(
         set((state) => ({
           messages: [
             ...state.messages,
-            { ...message, id: crypto.randomUUID(), timestamp: Date.now() },
+            { ...message, id: self.crypto?.randomUUID?.() ?? (Math.random().toString(36).substring(2, 15) + Date.now().toString(36)), timestamp: Date.now() },
           ],
         })),
       appendToLastAssistantMessage: (token) =>
