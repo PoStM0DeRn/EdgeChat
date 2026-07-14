@@ -25,7 +25,7 @@ services:
       context: .
       dockerfile: server/Dockerfile.ws
     ports:
-      - "127.0.0.1:3002:3002"
+      - "3002:3002"
     environment:
       - WS_PORT=3002
       - SAAS_URL=http://app:3000
