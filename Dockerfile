@@ -25,7 +25,6 @@ COPY --from=builder /build/node_modules/@prisma/ ./node_modules/@prisma/
 COPY --from=builder /build/node_modules/.prisma/ ./node_modules/.prisma/
 
 COPY --from=builder /build/db/custom.db /app/db-init/custom.db
-COPY --from=builder /build/node_modules/.cache/prisma/ /app/db-init/prisma-cache/
 
 COPY docker-entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
