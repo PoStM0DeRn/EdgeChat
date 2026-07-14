@@ -2,8 +2,7 @@ node_modules
 .git
 .gitignore
 .next
-.env
-.env*
+.env.local
 db/
 uploads/
 download/
