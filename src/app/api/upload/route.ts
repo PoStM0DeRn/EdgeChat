@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     fs.mkdirSync(PUBLIC_DIR, { recursive: true })
     fs.writeFileSync(path.join(PUBLIC_DIR, filename), buffer)
 
-    return NextResponse.json({ url: `/generated/${filename}` })
+    return NextResponse.json({ url: `/api/images/${filename}` })
   } catch (err) {
     console.error('Upload error:', err)
     return NextResponse.json({ error: 'Ошибка загрузки' }, { status: 500 })
