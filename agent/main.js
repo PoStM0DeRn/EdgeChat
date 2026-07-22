@@ -139,14 +139,13 @@ function connect(saasUrl, agentToken, agentName) {
     socket.disconnect()
   }
 
-  // Build WS URL: extract host from saasUrl, append port 3002
+  // Build WS URL: Agent connects directly to WS Server on port 3000
   let wsUrl
   try {
     const parsed = new URL(saasUrl)
-    wsUrl = `${parsed.protocol}//${parsed.hostname}:3002`
+    wsUrl = `${parsed.protocol}//${parsed.hostname}:3000`
   } catch {
-    // Fallback: strip path, keep host
-    wsUrl = saasUrl.replace(/\/+$/, '').replace(/:\d+$/, '').replace(/\/.*$/, '') + ':3002'
+    wsUrl = saasUrl.replace(/\/+$/, '').replace(/:\d+$/, '').replace(/\/.*$/, '') + ':3000'
   }
 
   let reconnectAttempt = 0

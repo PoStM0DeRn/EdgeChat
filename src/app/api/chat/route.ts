@@ -8,7 +8,7 @@ import { PLAN_LIMITS } from '@/lib/plan-limits'
 
 export const runtime = 'nodejs'
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'

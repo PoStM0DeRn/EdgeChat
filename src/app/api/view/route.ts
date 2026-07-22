@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
 const agentPortCache = new Map<string, { port: number; expires: number }>()
 const PORT_CACHE_TTL = 60_000

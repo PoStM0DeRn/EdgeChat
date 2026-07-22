@@ -1,12 +1,5 @@
 http://:80 {
-	@comfyws {
-		path /comfyui/ws*
-	}
-	reverse_proxy @comfyws ws-server:3002 {
-		header_up Host {host}
-	}
-
-	reverse_proxy app:3000 {
+	reverse_proxy ws-server:3000 {
 		header_up Host {host}
 		header_up X-Forwarded-For {remote_host}
 		header_up X-Forwarded-Proto {scheme}
@@ -15,14 +8,7 @@ http://:80 {
 }
 
 https://:443 {
-	@comfyws {
-		path /comfyui/ws*
-	}
-	reverse_proxy @comfyws ws-server:3002 {
-		header_up Host {host}
-	}
-
-	reverse_proxy app:3000 {
+	reverse_proxy ws-server:3000 {
 		header_up Host {host}
 		header_up X-Forwarded-For {remote_host}
 		header_up X-Forwarded-Proto {scheme}

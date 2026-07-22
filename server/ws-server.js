@@ -3,7 +3,8 @@ const { WebSocketServer } = require('ws')
 const http = require('http')
 const { randomUUID } = require('crypto')
 
-const PORT = process.env.WS_PORT || 3002
+const PORT = process.env.PORT || 3000
+const NEXT_INTERNAL_PORT = process.env.NEXT_INTERNAL_PORT || 3001
 const SAAS_URL = process.env.SAAS_URL || 'http://localhost:3000'
 
 async function verifyAgentToken(token) {
@@ -115,8 +116,25 @@ const server = http.createServer((req, res) => {
     return
   }
 
-  res.writeHead(404)
-  res.end()
+  const nextOpts = {
+    hostname: '127.0.0.1',
+    port: NEXT_INTERNAL_PORT,
+    path: req.url,
+    method: req.method,
+    headers: { ...req.headers, host: `127.0.0.1:${NEXT_INTERNAL_PORT}` },
+  }
+  const nextReq = http.request(nextOpts, (nextRes) => {
+    res.writeHead(nextRes.statusCode, nextRes.headers)
+    nextRes.pipe(res)
+  })
+  nextReq.on('error', (err) => {
+    console.error('[WS] Next.js proxy error:', err.message)
+    if (!res.headersSent) {
+      res.writeHead(502, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ error: 'Next.js proxy error: ' + err.message }))
+    }
+  })
+  req.pipe(nextReq)
 })
 
 const io = new Server(server, {

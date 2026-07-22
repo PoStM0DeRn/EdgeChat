@@ -6,6 +6,6 @@ RUN npm ci --omit=dev
 
 COPY server/ws-server.js ./
 
-EXPOSE 3002
+EXPOSE 3000
 
 CMD ["node", "ws-server.js"]

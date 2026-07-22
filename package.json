@@ -3,10 +3,10 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "next dev -p 3001",
     "dev:ws": "node server/ws-server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:ws\"",
-    "dev:log": "next dev -p 3000 > dev.log 2>&1",
+    "dev:log": "next dev -p 3001 > dev.log 2>&1",
     "build": "next build",
     "start": "node .next/standalone/server.js",
     "start:ws": "node server/ws-server.js",

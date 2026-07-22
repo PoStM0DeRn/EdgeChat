@@ -1,7 +1,7 @@
 import { db } from './db'
 import { cosineSimilarity } from './embeddings'
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
 const VECTOR_WEIGHT = 0.4
 const KEYWORD_WEIGHT = 0.6

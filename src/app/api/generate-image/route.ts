@@ -5,7 +5,7 @@ import { checkLimit } from '@/lib/plan-limits'
 
 export const runtime = 'nodejs'
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
 export async function POST(req: NextRequest) {
   try {

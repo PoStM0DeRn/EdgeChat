@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3002'
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
 const agentPortCache = new Map<string, { port: number; expires: number }>()
 const PORT_CACHE_TTL = 60_000
@@ -258,7 +258,7 @@ function rewriteHtml(buf: Buffer, token: string): Buffer {
   window.WebSocket=function(u,pr){
     if(typeof u==="string"&&u.indexOf("/ws?")!==-1){
       var c=(u.match(/clientId=([^&]+)/)||[])[1]||"";
-      u=(location.protocol==="https:"?"wss:":"ws:")+"//"+location.hostname+":3002/comfyui/ws?clientId="+encodeURIComponent(c)+"&token="+encodeURIComponent(T)
+      u=(location.protocol==="https:"?"wss:":"ws:")+"//"+location.host+"/comfyui/ws?clientId="+encodeURIComponent(c)+"&token="+encodeURIComponent(T)
     }
     return new ow(u,pr)
   };

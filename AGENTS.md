@@ -15,7 +15,7 @@ npx prisma db push
 # Dev — Next.js (port 3000)
 npx next dev -p 3000
 
-# Dev — WebSocket server (port 3002)
+# Dev — WebSocket server (port 3000, combined with Next.js proxy)
 node server/ws-server.js
 
 # Dev — both at once
@@ -50,26 +50,26 @@ scripts/download-comfyui-frontend.ps1
 Full ComfyUI SPA proxied from user's local ComfyUI through Agent to browser:
 
 ```
-Browser ─── /comfyui/* ──→ SaaS ──HTTP──→ WS Server :3002 ──Socket.IO──→ Agent ──HTTP──→ 8189 ──→ 8188
+Browser ─── /comfyui/* ──→ SaaS ──HTTP──→ WS Server :3000 (прокси на Next.js :3001) ──Socket.IO──→ Agent ──HTTP──→ 8189 ──→ 8188
               ↓ 3-layer auth priority               TCP proxy (net)
               ├─ ?token=xxx (URL query param)
               ├─ agent-token cookie (Set-Cookie at /, Path=/)
               └─ x-agent-token header (for programmatic use)
               ├─ HTML rewriting → /comfyui/prefix + ?token=xxx
-              └─ ws://host/ws → ws://host:3002/comfyui/ws?token=xxx
+              └─ ws://host/ws → ws://host/comfyui/ws?token=xxx (через единый порт)
 ```
 
 Key components:
 - **agent/main.js** starts a TCP proxy (`net.createServer`) on :8189 → :8188, plus Socket.IO tunnel handlers for `tunnel:http:request` and `tunnel:ws:open/close/message`
 - **server/ws-server.js** has a raw `WebSocketServer` at `/comfyui/ws` (using `ws` package alongside Socket.IO), plus `POST /api/agent/tunnel` HTTP endpoint
 - **SaaS catch-all route** `src/app/comfyui/[[...path]]/route.ts` handles all HTTP methods, rewrites HTML (injects `<base href="/comfyui/">`, adds `?token=xxx` to ALL `src`/`href`/`action` attributes including relative paths, `@import url()`, CSS `url()`), injects script that patches `fetch`/`XHR`/`WebSocket`; sets `Set-Cookie` on first HTML response (`Path=/; SameSite=Lax`); reads token priority: URL query param → cookie → header
-- **Injected script** patches `fetch` and `XMLHttpRequest.open` to prepend `/comfyui` prefix (auth via `?token=` in URL or cookie), patches `WebSocket` to redirect to `ws://host:3002/comfyui/ws?token=xxx`, and sets `document.cookie` as additional fallback
+- **Injected script** patches `fetch` and `XMLHttpRequest.open` to prepend `/comfyui` prefix (auth via `?token=` in URL or cookie), patches `WebSocket` to redirect to `ws://host/comfyui/ws?token=xxx` (through WS Server on the same port), and sets `document.cookie` as additional fallback
 - **Caddyfile** routes `/comfyui/ws*` to WS Server for WebSocket upgrade
 - **Auto-detect nodes** in `handleImageRequest` — finds `CLIPTextEncode`, `KSampler`, `EmptyLatentImage` by `class_type` instead of hardcoded node IDs
 
 ### Chat flow
 ```
-Browser → POST /api/chat → Next.js → HTTP → WS Server :3002 → Socket.IO → Desktop Agent → Ollama/LM Studio
+Browser → POST /api/chat → Next.js → HTTP → WS Server :3000 → Socket.IO → Desktop Agent → Ollama/LM Studio
                                                                     ↓
 Browser ← SSE stream ← Next.js ← HTTP ← WS Server ← Socket.IO ← Desktop Agent
 ```
@@ -118,7 +118,7 @@ src/
     pdf-parser.ts             # PDF/TXT/MD via pdf2json
 ```
 
-### WebSocket Server (port 3002, standalone)
+### WebSocket Server (port 3000, единая точка входа + прокси на Next.js :3001)
 ```
 server/ws-server.js           # Socket.IO server, bridges SaaS ↔ Agent
 server/Dockerfile.ws          # Docker build for ws-server
@@ -187,7 +187,7 @@ Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy
 | `DATABASE_URL` | Yes | `file:./db/custom.db` locally, `file:/app/db/custom.db` in Docker |
 | `NEXTAUTH_SECRET` | Yes | ≥32 chars, use `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Yes | Your public URL or `http://localhost:3000` |
-| `WS_SERVER_URL` | Dev | Default `http://localhost:3002` |
+| `WS_SERVER_URL` | Dev | Default `http://localhost:3000` |
 | `STRIPE_SECRET_KEY` | Pro | From Stripe Dashboard |
 | `STRIPE_WEBHOOK_SECRET` | Pro | From Stripe Dashboard webhook settings |
 | `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | Pro | Stripe price ID for $5/mo |

@@ -30,11 +30,11 @@ COPY docker-entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3001
 ENV HOSTNAME=0.0.0.0
 
 VOLUME ["/app/db", "/app/uploads"]
 
-EXPOSE 3000
+EXPOSE 3001
 
 ENTRYPOINT ["/app/entrypoint.sh"]

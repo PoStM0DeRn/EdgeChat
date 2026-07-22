@@ -3,15 +3,13 @@ services:
     build: .
     env_file:
       - .env
-    ports:
-      - "127.0.0.1:3000:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
       - DATABASE_URL=file:/app/db/custom.db
-      - WS_SERVER_URL=http://ws-server:3002
+      - WS_SERVER_URL=http://ws-server:3000
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=3001
       - HOSTNAME=0.0.0.0
     volumes:
       - db-data:/app/db
@@ -25,10 +23,11 @@ services:
       context: .
       dockerfile: server/Dockerfile.ws
     ports:
-      - "3002:3002"
+      - "3000:3000"
     environment:
-      - WS_PORT=3002
-      - SAAS_URL=http://app:3000
+      - PORT=3000
+      - NEXT_INTERNAL_PORT=3001
+      - SAAS_URL=http://app:3001
     restart: unless-stopped
 
   caddy:
@@ -41,7 +40,7 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
-      - app
+      - ws-server
     restart: unless-stopped
 
 volumes:
