@@ -6,6 +6,7 @@ const { randomUUID } = require('crypto')
 const PORT = process.env.PORT || 3000
 const NEXT_INTERNAL_PORT = process.env.NEXT_INTERNAL_PORT || 3001
 const SAAS_URL = process.env.SAAS_URL || 'http://localhost:3000'
+const SAAS_HOST = new URL(SAAS_URL).hostname
 
 async function verifyAgentToken(token) {
   try {
@@ -117,11 +118,11 @@ const server = http.createServer((req, res) => {
   }
 
   const nextOpts = {
-    hostname: '127.0.0.1',
+    hostname: SAAS_HOST,
     port: NEXT_INTERNAL_PORT,
     path: req.url,
     method: req.method,
-    headers: { ...req.headers, host: `127.0.0.1:${NEXT_INTERNAL_PORT}` },
+    headers: { ...req.headers, host: `${SAAS_HOST}:${NEXT_INTERNAL_PORT}` },
   }
   const nextReq = http.request(nextOpts, (nextRes) => {
     res.writeHead(nextRes.statusCode, nextRes.headers)
