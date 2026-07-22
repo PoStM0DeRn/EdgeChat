@@ -51,6 +51,8 @@ import {
   Key,
   Copy,
   RefreshCw,
+  Image,
+  ExternalLink,
 } from 'lucide-react'
 
 export function ChatPage() {
@@ -60,10 +62,12 @@ export function ChatPage() {
     setSettings,
     messages,
     isStreaming,
+    isGeneratingImage,
     addMessage,
     appendToLastAssistantMessage,
     appendToLastAssistantReasoning,
     setIsStreaming,
+    setIsGeneratingImage,
     clearMessages: clearLocalMessages,
     agentOnline,
     agentName,
@@ -95,6 +99,8 @@ export function ChatPage() {
   const [input, setInput] = useState('')
   const [streamError, setStreamError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [imagePromptOpen, setImagePromptOpen] = useState(false)
+  const [imagePrompt, setImagePrompt] = useState('')
   const [embeddingDocId, setEmbeddingDocId] = useState<string | null>(null)
   const [promptDialogOpen, setPromptDialogOpen] = useState(false)
   const [newPromptTitle, setNewPromptTitle] = useState('')
@@ -322,10 +328,11 @@ export function ChatPage() {
         const data = await res.json()
         // Replace local messages with DB messages
         // We use the store directly to batch-set messages
-        const msgs = data.messages.map((m: { id: string; role: string; content: string; createdAt: string }) => ({
+        const msgs = data.messages.map((m: { id: string; role: string; content: string; imageUrl?: string; createdAt: string }) => ({
           id: m.id,
           role: m.role as 'user' | 'assistant' | 'system',
           content: m.content,
+          imageUrl: m.imageUrl || undefined,
           timestamp: new Date(m.createdAt).getTime(),
         }))
         useChatStore.setState({ messages: msgs })
@@ -337,12 +344,12 @@ export function ChatPage() {
   }, [setCurrentSessionTitle])
 
   // Save a message to the current session
-  const saveMessageToSession = useCallback(async (sessionId: string, role: string, content: string) => {
+  const saveMessageToSession = useCallback(async (sessionId: string, role: string, content: string, imageUrl?: string) => {
     try {
       await fetch(`/api/sessions/${sessionId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, content }),
+        body: JSON.stringify({ role, content, imageUrl }),
       })
     } catch (err) {
       console.error('Failed to save message:', err)
@@ -575,6 +582,65 @@ export function ChatPage() {
     appendToLastAssistantMessage,
     appendToLastAssistantReasoning,
     setIsStreaming, removeMessage, saveMessageToSession, loadSessions])
+
+  // Generate image via ComfyUI
+  const handleGenerateImage = useCallback(async () => {
+    const prompt = imagePrompt.trim()
+    if (!prompt || isGeneratingImage || isStreaming) return
+    setImagePromptOpen(false)
+    setImagePrompt('')
+    setIsGeneratingImage(true)
+
+    let sessionId = currentSessionId
+    if (!sessionId) {
+      sessionId = await ensureSession()
+    }
+
+    addMessage({ role: 'user', content: `🎨 ${prompt}` })
+    if (sessionId) {
+      await saveMessageToSession(sessionId, 'user', `🎨 ${prompt}`)
+    }
+
+    addMessage({ role: 'assistant', content: '' })
+    setIsStreaming(true)
+
+    try {
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, agentToken: settings.agentToken }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Ошибка генерации' }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      const { url } = await res.json() as { url: string }
+
+      const state = useChatStore.getState()
+      const lastMsg = state.messages.filter(m => m.role === 'assistant' && !m.content).pop()
+      if (lastMsg) {
+        replaceMessage(lastMsg.id, '')
+        useChatStore.setState({
+          messages: state.messages.map(m =>
+            m.id === lastMsg.id ? { ...m, imageUrl: url, content: '' } : m
+          ),
+        })
+        if (sessionId) {
+          await saveMessageToSession(sessionId, 'assistant', '', url)
+        }
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : 'Неизвестная ошибка'
+      toast({ title: 'Ошибка генерации', description: errMsg, variant: 'destructive' })
+      const state = useChatStore.getState()
+      const emptyAssistant = state.messages.filter(m => m.role === 'assistant' && !m.content).pop()
+      if (emptyAssistant) removeMessage(emptyAssistant.id)
+    } finally {
+      setIsGeneratingImage(false)
+      setIsStreaming(false)
+    }
+  }, [imagePrompt, isGeneratingImage, isStreaming, settings.agentToken, currentSessionId, ensureSession,
+    addMessage, saveMessageToSession, setIsGeneratingImage, setIsStreaming, replaceMessage, removeMessage])
 
   // Edit a user message and resend
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
@@ -1922,6 +1988,59 @@ export function ChatPage() {
                   className="min-h-[44px] max-h-[200px] resize-none pr-2"
                   rows={1}
                 />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.open(`/comfyui?token=${encodeURIComponent(settings.agentToken)}`, '_blank')}
+                disabled={!settings.agentToken}
+                className="h-11 w-11 shrink-0"
+                title="ComfyUI редактор"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setImagePromptOpen(!imagePromptOpen)}
+                  disabled={isStreaming || isGeneratingImage || !agentOnline}
+                  className="h-11 w-11 shrink-0"
+                  title="Создать изображение"
+                >
+                  {isGeneratingImage ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Image className="h-4 w-4" />
+                  )}
+                </Button>
+
+                {imagePromptOpen && (
+                  <div className="absolute bottom-full mb-2 right-0 w-96 p-4 rounded-lg border bg-popover shadow-xl z-50">
+                    <p className="text-sm font-medium mb-2">Опишите изображение</p>
+                    <Textarea
+                      value={imagePrompt}
+                      onChange={(e) => setImagePrompt(e.target.value)}
+                      placeholder="Dramatic black and white portrait..."
+                      rows={3}
+                      className="resize-none"
+                      autoFocus
+                    />
+                    <div className="flex gap-2 mt-2 justify-end">
+                      <Button size="sm" variant="ghost" onClick={() => { setImagePromptOpen(false); setImagePrompt('') }}>
+                        Отмена
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleGenerateImage}
+                        disabled={!imagePrompt.trim() || isGeneratingImage}
+                      >
+                        {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                        Создать
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
               {isStreaming ? (
                 <Button

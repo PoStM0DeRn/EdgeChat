@@ -389,6 +389,21 @@
         <label class="form-group__label" for="lmstudio-model">Модель LM Studio</label>
         <input class="form-group__input" type="text" id="lmstudio-model" placeholder="qwythos-9b-claude-mythos-5-1m">
       </div>
+
+      <div class="form-group" style="margin-top:8px;border-top:1px solid var(--border);padding-top:12px">
+        <label class="form-group__label" style="font-weight:600;color:var(--foreground)">⚡ ComfyUI</label>
+      </div>
+      <div class="form-group">
+        <label class="form-group__label" for="comfy-url">ComfyUI URL</label>
+        <input class="form-group__input" type="url" id="comfy-url" placeholder="http://localhost:8188" value="http://localhost:8188">
+      </div>
+      <div class="form-group">
+        <label class="form-group__label" for="workflow-path">Workflow (путь к API .json)</label>
+        <div style="display:flex;gap:8px">
+          <input class="form-group__input" type="text" id="workflow-path" placeholder="C:\Users\...\workflow_API.json" style="flex:1">
+          <button class="btn btn--secondary" style="width:auto;padding:0 12px;flex-shrink:0" onclick="handleSelectWorkflow()">Обзор</button>
+        </div>
+      </div>
     </div>
 
     <div class="mt-3 gap-2">
@@ -414,6 +429,8 @@
       if (config.agentName) document.getElementById('agent-name').value = config.agentName
       if (config.lmstudioUrl) document.getElementById('lmstudio-url').value = config.lmstudioUrl
       if (config.lmstudioModel) document.getElementById('lmstudio-model').value = config.lmstudioModel
+      if (config.comfyUrl) document.getElementById('comfy-url').value = config.comfyUrl
+      if (config.workflowPath) document.getElementById('workflow-path').value = config.workflowPath
 
       const status = await window.agent.getStatus()
       updateUI(status)
@@ -475,8 +492,10 @@
       const agentName = document.getElementById('agent-name').value.trim() || 'My PC'
       const lmstudioUrl = document.getElementById('lmstudio-url').value.trim() || 'http://localhost:1234'
       const lmstudioModel = document.getElementById('lmstudio-model').value.trim()
+      const comfyUrl = document.getElementById('comfy-url').value.trim() || 'http://localhost:8188'
+      const workflowPath = document.getElementById('workflow-path').value.trim()
 
-      await window.agent.saveConfig({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel })
+      await window.agent.saveConfig({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel, comfyUrl, workflowPath })
       const btn = document.getElementById('btn-save')
       btn.textContent = '\u2713 Сохранено'
       setTimeout(() => { btn.textContent = 'Сохранить' }, 1500)
@@ -488,6 +507,8 @@
       const agentName = document.getElementById('agent-name').value.trim() || 'My PC'
       const lmstudioUrl = document.getElementById('lmstudio-url').value.trim() || 'http://localhost:1234'
       const lmstudioModel = document.getElementById('lmstudio-model').value.trim()
+      const comfyUrl = document.getElementById('comfy-url').value.trim() || 'http://localhost:8188'
+      const workflowPath = document.getElementById('workflow-path').value.trim()
 
       if (!saasUrl || !agentToken) {
         updateUI({ error: 'Заполните URL сервера и токен' })
@@ -499,7 +520,14 @@
       btn.innerHTML = '<span class="spinner"></span>Подключение...'
       updateUI({ online: false })
 
-      await window.agent.connect({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel })
+      await window.agent.connect({ saasUrl, agentToken, agentName, lmstudioUrl, lmstudioModel, comfyUrl, workflowPath })
+    }
+
+    async function handleSelectWorkflow() {
+      const result = await window.agent.selectFile()
+      if (result) {
+        document.getElementById('workflow-path').value = result
+      }
     }
 
     async function handleDisconnect() {

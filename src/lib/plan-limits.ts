@@ -7,6 +7,7 @@ export const PLAN_LIMITS = {
     agentTokens: 3,
     customPrompts: true,
     chatRateLimit: 30,
+    imageGenerations: 10,
   },
   pro: {
     documents: 50,
@@ -14,6 +15,7 @@ export const PLAN_LIMITS = {
     agentTokens: 10,
     customPrompts: true,
     chatRateLimit: 120,
+    imageGenerations: 100,
   },
 } as const
 
@@ -50,6 +52,18 @@ export async function checkLimit(
     current = await db.chatSession.count({ where: { userId } })
   } else if (resource === 'agentTokens') {
     current = await db.agentToken.count({ where: { userId, isActive: true } })
+  } else if (resource === 'imageGenerations') {
+    const userSessions = await db.chatSession.findMany({
+      where: { userId },
+      select: { id: true },
+    })
+    const sessionIds = userSessions.map((s) => s.id)
+    current = await db.chatMessage.count({
+      where: {
+        sessionId: { in: sessionIds },
+        imageUrl: { not: null },
+      },
+    })
   }
 
   const allowed = current < limit

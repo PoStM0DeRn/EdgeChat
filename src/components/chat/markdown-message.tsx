@@ -7,7 +7,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import type { Message } from '@/lib/store'
 import { Button } from '@/components/ui/button'
-import { Copy, Check, PenLine, Trash2, RotateCcw, Bot, User, ChevronRight, Brain } from 'lucide-react'
+import { Copy, Check, PenLine, Trash2, RotateCcw, Bot, User, ChevronRight, Brain, Download } from 'lucide-react'
 
 interface MarkdownMessageProps {
   message: Message
@@ -113,7 +113,32 @@ export function MarkdownMessage({ message, onDelete, onEdit, onResend }: Markdow
               </div>
             </div>
           )}
-          {isStreaming ? (
+          {message.imageUrl ? (
+            <div className="space-y-2">
+              <div className="relative rounded-lg overflow-hidden border border-border">
+                <img
+                  src={message.imageUrl}
+                  alt="generated"
+                  className="w-full h-auto max-h-96 object-contain bg-black/5"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const a = document.createElement('a')
+                    a.href = message.imageUrl!
+                    a.download = message.imageUrl!.split('/').pop() || 'image.png'
+                    a.click()
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Скачать
+                </Button>
+              </div>
+            </div>
+          ) : isStreaming ? (
             <div className="flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" />
               <span className="h-2 w-2 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" />

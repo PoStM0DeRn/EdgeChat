@@ -16,11 +16,11 @@ export async function POST(
 
     const { sessionId } = await params
     const body = await req.json()
-    const { role, content } = body as { role: string; content: string }
+    const { role, content, imageUrl } = body as { role: string; content: string; imageUrl?: string }
 
-    if (!role || !content) {
+    if (!role) {
       return NextResponse.json(
-        { error: 'role и content обязательны' },
+        { error: 'role обязателен' },
         { status: 400 }
       )
     }
@@ -34,7 +34,8 @@ export async function POST(
       data: {
         sessionId,
         role,
-        content,
+        content: content || '',
+        imageUrl: imageUrl || null,
       },
     })
 

@@ -70,6 +70,7 @@ model ChatMessage {
   sessionId String
   role      String      // "user", "assistant", "system"
   content   String
+  imageUrl  String?
   createdAt DateTime    @default(now())
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 

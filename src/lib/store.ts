@@ -6,6 +6,7 @@ export interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
   reasoningContent?: string
+  imageUrl?: string
   timestamp: number
 }
 
@@ -60,10 +61,12 @@ interface ChatState {
   // Chat
   messages: Message[]
   isStreaming: boolean
+  isGeneratingImage: boolean
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void
   appendToLastAssistantMessage: (token: string) => void
   appendToLastAssistantReasoning: (token: string) => void
   setIsStreaming: (value: boolean) => void
+  setIsGeneratingImage: (value: boolean) => void
   clearMessages: () => void
   removeMessage: (id: string) => void
   replaceMessage: (id: string, content: string) => void
@@ -126,6 +129,7 @@ export const useChatStore = create<ChatState>()(
       // Chat
       messages: [],
       isStreaming: false,
+      isGeneratingImage: false,
       addMessage: (message) =>
         set((state) => ({
           messages: [
@@ -158,6 +162,7 @@ export const useChatStore = create<ChatState>()(
           return { messages: msgs }
         }),
       setIsStreaming: (value) => set({ isStreaming: value }),
+      setIsGeneratingImage: (value) => set({ isGeneratingImage: value }),
       clearMessages: () => set({ messages: [] }),
       removeMessage: (id) =>
         set((state) => ({
