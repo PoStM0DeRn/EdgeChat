@@ -726,7 +726,7 @@ function httpRequestBuffer(url, method) {
 // Full HTTP request for tunneling (returns body as Buffer, preserves status/headers)
 function httpRequestFull(hostname, port, path, method, headers, body) {
   return new Promise((resolve, reject) => {
-    const options = { hostname, port, path, method, headers, timeout: 60000, agent: tunnelHttpAgent }
+    const options = { hostname, port, path, method, headers, timeout: 120000, agent: tunnelHttpAgent }
     const req = http.request(options, (res) => {
       const chunks = []
       res.on('data', (chunk) => chunks.push(chunk))

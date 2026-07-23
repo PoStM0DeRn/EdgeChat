@@ -5,31 +5,6 @@ export const maxDuration = 60
 
 const WS_SERVER_URL = process.env.WS_SERVER_URL || 'http://localhost:3000'
 
-const agentPortCache = new Map<string, { port: number; expires: number }>()
-const PORT_CACHE_TTL = 60_000
-
-async function getAgentHttpPort(token: string): Promise<number | null> {
-  const cached = agentPortCache.get(token)
-  if (cached && cached.expires > Date.now()) {
-    return cached.port
-  }
-  try {
-    const res = await fetch(`${WS_SERVER_URL}/api/agent/status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-      signal: AbortSignal.timeout(3000),
-    })
-    const data = await res.json()
-    if (data.online && data.httpPort) {
-      agentPortCache.set(token, { port: data.httpPort, expires: Date.now() + PORT_CACHE_TTL })
-      return data.httpPort
-    }
-  } catch {}
-  agentPortCache.set(token, { port: 0, expires: Date.now() + 5000 })
-  return null
-}
-
 function buildResponse(body: Buffer, contentType: string, statusCode: number, isHtmlPage: boolean, hasTokenInQuery: boolean, agentToken: string): NextResponse {
   let finalBody = body
   if (contentType.includes('text/html')) {
@@ -94,33 +69,7 @@ async function handleTunnel(req: NextRequest) {
     }
   })
 
-  // Try direct HTTP to Agent's proxy (faster, no Socket.IO overhead)
-  const httpPort = await getAgentHttpPort(agentToken)
-  if (httpPort) {
-    try {
-      const agentHeaders: Record<string, string> = { ...headers, 'x-agent-token': agentToken }
-      let agentBody: BodyInit | undefined
-      if (bodyBase64) {
-        agentBody = Buffer.from(bodyBase64, 'base64')
-      }
-
-      const agentRes = await fetch(`http://127.0.0.1:${httpPort}${path}${cleanSearchFull}`, {
-        method: req.method,
-        headers: agentHeaders,
-        body: agentBody,
-        signal: AbortSignal.timeout(120_000),
-      })
-
-      const resBody = Buffer.from(await agentRes.arrayBuffer())
-      const contentType = agentRes.headers.get('content-type') || 'application/octet-stream'
-
-      return buildResponse(resBody, contentType, agentRes.status, isHtmlPage, hasTokenInQuery, agentToken)
-    } catch (e) {
-      // Fall through to Socket.IO tunnel
-    }
-  }
-
-  // Fall back to Socket.IO tunnel
+  // Tunnel via Socket.IO (Agent runs on user's machine, not reachable directly)
   let tunnelRes
   try {
     tunnelRes = await fetch(`${WS_SERVER_URL}/api/agent/tunnel`, {

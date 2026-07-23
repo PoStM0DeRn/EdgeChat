@@ -143,6 +143,7 @@ const io = new Server(server, {
     origin: '*',
     methods: ['GET', 'POST'],
   },
+  maxHttpBufferSize: 50e6,
   pingInterval: 25_000,
   pingTimeout: 30_000,
 })
