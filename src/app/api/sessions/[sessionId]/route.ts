@@ -37,6 +37,7 @@ export async function GET(
         id: m.id,
         role: m.role,
         content: m.content,
+        imageUrl: m.imageUrl,
         createdAt: m.createdAt.toISOString(),
       })),
       createdAt: session.createdAt.toISOString(),
