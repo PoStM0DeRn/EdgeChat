@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 620" fill="none">
+  <rect width="420" height="620" rx="12" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="420" height="44" rx="12" fill="#222"/>
+  <rect x="0" y="24" width="420" height="20" fill="#222"/>
+  <text x="16" y="28" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#fff">EdgeChat Agent</text>
+  <text x="392" y="28" font-family="system-ui,sans-serif" font-size="18" fill="#666" text-anchor="middle">&#xd7;</text>
+
+  <!-- Status card - online -->
+  <rect x="16" y="56" width="388" height="72" rx="8" fill="#252525" stroke="#2a5a3a" stroke-width="1"/>
+  <text x="210" y="80" font-family="system-ui,sans-serif" font-size="26" text-anchor="middle">&#x1F7E2;</text>
+  <text x="210" y="102" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">Подключён</text>
+  <text x="210" y="116" font-family="system-ui,sans-serif" font-size="12" fill="#888" text-anchor="middle">My PC</text>
+
+  <!-- LM Studio badge -->
+  <rect x="148" y="136" width="124" height="22" rx="999" fill="#162b1e" stroke="#2a5a3a" stroke-width="1"/>
+  <circle cx="164" cy="147" r="3" fill="#4ade80"/>
+  <text x="172" y="151" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#4ade80">LM Studio OK</text>
+
+  <!-- Server URL -->
+  <text x="16" y="182" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">URL сервера</text>
+  <rect x="16" y="188" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="211" font-family="system-ui,sans-serif" font-size="13" fill="#666">https://your-saas.vercel.app</text>
+
+  <!-- Agent Token -->
+  <text x="16" y="242" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">Токен Агента</text>
+  <rect x="16" y="248" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="271" font-family="system-ui,sans-serif" font-size="13" fill="#666">&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;</text>
+
+  <!-- Agent Name -->
+  <text x="16" y="302" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">Имя Агента</text>
+  <rect x="16" y="308" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="331" font-family="system-ui,sans-serif" font-size="13" fill="#ccc">My PC</text>
+
+  <!-- LM Studio URL -->
+  <text x="16" y="362" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">LM Studio URL</text>
+  <rect x="16" y="368" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="391" font-family="system-ui,sans-serif" font-size="13" fill="#ccc">http://localhost:1234</text>
+
+  <!-- LM Studio Model -->
+  <text x="16" y="422" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">Модель LM Studio</text>
+  <rect x="16" y="428" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="451" font-family="system-ui,sans-serif" font-size="13" fill="#666">qwythos-9b-claude-mythos-5-1m</text>
+
+  <!-- ComfyUI section -->
+  <rect x="16" y="472" width="388" height="1" fill="#333"/>
+  <text x="16" y="490" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#fff">&#x26A1; ComfyUI</text>
+
+  <!-- ComfyUI URL -->
+  <text x="16" y="510" font-family="system-ui,sans-serif" font-size="12" font-weight="500" fill="#888">ComfyUI URL</text>
+  <rect x="16" y="516" width="388" height="36" rx="6" fill="none" stroke="#444" stroke-width="1"/>
+  <text x="28" y="539" font-family="system-ui,sans-serif" font-size="13" fill="#ccc">http://localhost:8188</text>
+
+  <!-- Buttons -->
+  <rect x="16" y="568" width="388" height="36" rx="6" fill="#333" stroke="#444" stroke-width="1"/>
+  <text x="210" y="591" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#ccc" text-anchor="middle">Сохранить</text>
+</svg>

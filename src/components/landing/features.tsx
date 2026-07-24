@@ -1,14 +1,14 @@
 'use client'
 
-import { Shield, Database, Monitor, Sparkles, Bot, Code } from 'lucide-react'
+import { Monitor, Download, Globe, Database, Bot, Code } from 'lucide-react'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Shield,
-  Database,
   Monitor,
-  Sparkles,
+  Download,
+  Globe,
+  Database,
   Bot,
   Code,
 }
