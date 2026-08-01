@@ -11,7 +11,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TourOverlay } from '@/components/onboarding/tour-overlay'
+import { Logo } from '@/components/ui/logo'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
@@ -28,7 +32,6 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Bot,
   User,
   Upload,
   BookOpen,
@@ -40,7 +43,6 @@ import {
   Shield,
   PanelLeftClose,
   PanelLeft,
-  Database,
   Play,
   History,
   PenLine,
@@ -122,6 +124,7 @@ export function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isNearBottomRef = useRef(true)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [sessionsLoading, setSessionsLoading] = useState(true)
 
   // Smart auto-scroll: only scroll if user is near bottom
   useEffect(() => {
@@ -309,6 +312,7 @@ export function ChatPage() {
 
   // Load sessions
   const loadSessions = useCallback(async () => {
+    setSessionsLoading(true)
     try {
       const res = await fetch('/api/sessions')
       if (res.ok) {
@@ -317,6 +321,8 @@ export function ChatPage() {
       }
     } catch (err) {
       console.error('Failed to load sessions:', err)
+    } finally {
+      setSessionsLoading(false)
     }
   }, [setSessions])
 
@@ -1069,6 +1075,7 @@ export function ChatPage() {
 
   return (
     <div className="flex h-dvh flex-col bg-background overflow-hidden">
+      <TourOverlay />
       {/* Header */}
       <header className="flex items-center justify-between border-b px-4 py-3 bg-card shrink-0">
           <div className="flex items-center gap-3">
@@ -1077,6 +1084,7 @@ export function ChatPage() {
               size="icon"
               onClick={() => setSettingsOpen(!settingsOpen)}
               className="shrink-0"
+              data-tour="sidebar-toggle"
             >
               {settingsOpen ? (
                 <PanelLeftClose className="h-5 w-5" />
@@ -1084,33 +1092,20 @@ export function ChatPage() {
                 <PanelLeft className="h-5 w-5" />
               )}
             </Button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Bot className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base font-semibold leading-tight truncate max-w-[200px]">
-                {currentSessionId
-                  ? currentSessionTitle || 'Новый чат'
-                  : 'TunnelChat'}
-              </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                {currentSessionId
-                  ? `${
-                      messages.length
-                    } сообщений`
-                  : 'RAG — Проксирование к локальной LLM'}
-              </p>
-            </div>
+            <Logo size="md" />
             {currentSessionId && messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={handleExportChat}
-                title="Экспортировать чат"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+              <>
+                <Separator orientation="vertical" className="h-5" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={handleExportChat}
+                  title="Экспортировать чат"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </>
             )}
             {currentSessionId && (
               <Button
@@ -1150,11 +1145,7 @@ export function ChatPage() {
               </button>
             </Badge>
           )}
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="hidden sm:inline text-muted-foreground text-xs">
-              {agentOnline ? '🟢 Агент' : '🔴 Агент'}
-            </span>
-          </div>
+
           {session?.user && (
             <div className="flex items-center gap-2">
               {userPlan === 'pro' ? (
@@ -1189,14 +1180,19 @@ export function ChatPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
+        <AnimatePresence initial={false}>
         {settingsOpen && (
-          <div
+          <motion.div
+            initial={{ x: -320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -320, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             style={{ width: sidebarWidth, minWidth: 240, maxWidth: 600 }}
             className="h-full border-r bg-card flex flex-col shrink-0 overflow-hidden relative"
           >
             {/* Resize handle */}
             <div
-              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 z-10"
+              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-brand/40 active:bg-brand/60 z-10"
               onMouseDown={(e) => {
                 setIsResizing(true)
                 e.preventDefault()
@@ -1210,35 +1206,37 @@ export function ChatPage() {
                   className="flex flex-col flex-1 overflow-hidden"
                 >
                   <TabsList className="w-full rounded-none border-b bg-transparent p-0 h-auto">
-                    <TabsTrigger
-                      value="sessions"
-                      className="flex-1 py-2.5 data-[state=active]:bg-muted rounded-none text-xs"
-                    >
-                      <History className="h-3.5 w-3.5 mr-1" />
-                      История
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="settings"
-                      className="flex-1 py-2.5 data-[state=active]:bg-muted rounded-none text-xs"
-                    >
-                      <Settings className="h-3.5 w-3.5 mr-1" />
-                      Настройки
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="documents"
-                      className="flex-1 py-2.5 data-[state=active]:bg-muted rounded-none text-xs"
-                    >
-                      <FileText className="h-3.5 w-3.5 mr-1" />
-                      Документы
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="prompts"
-                      className="flex-1 py-2.5 data-[state=active]:bg-muted rounded-none text-xs"
-                    >
-                      <BookOpen className="h-3.5 w-3.5 mr-1" />
-                      Промпты
-                    </TabsTrigger>
-                  </TabsList>
+                      <TabsTrigger
+                        value="sessions"
+                        className="flex-1 flex-col gap-0.5 py-2 data-[state=active]:bg-brand/10 data-[state=active]:text-brand rounded-none text-[10px]"
+                      >
+                        <History className="h-4 w-4" />
+                        <span>История</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="settings"
+                        className="flex-1 flex-col gap-0.5 py-2 data-[state=active]:bg-brand/10 data-[state=active]:text-brand rounded-none text-[10px]"
+                        data-tour="tab-settings"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Настройки</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="documents"
+                        className="flex-1 flex-col gap-0.5 py-2 data-[state=active]:bg-brand/10 data-[state=active]:text-brand rounded-none text-[10px]"
+                        data-tour="tab-documents"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span>Документы</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="prompts"
+                        className="flex-1 flex-col gap-0.5 py-2 data-[state=active]:bg-brand/10 data-[state=active]:text-brand rounded-none text-[10px]"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        <span>Промпты</span>
+                      </TabsTrigger>
+                    </TabsList>
 
               {/* Sessions Tab */}
               <TabsContent
@@ -1271,7 +1269,21 @@ export function ChatPage() {
 
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-2">
-                    {sessions.length === 0 ? (
+                    {sessionsLoading ? (
+                      <div className="space-y-2">
+                        {[1,2,3].map((i) => (
+                          <div key={i} className="rounded-lg border p-3 space-y-2 animate-pulse">
+                            <div className="flex items-start gap-2">
+                              <div className="h-4 w-4 rounded bg-muted mt-0.5" />
+                              <div className="flex-1 space-y-1.5">
+                                <div className="h-4 w-3/4 rounded bg-muted" />
+                                <div className="h-3 w-1/3 rounded bg-muted" />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : sessions.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">Нет сохранённых чатов</p>
@@ -1288,9 +1300,9 @@ export function ChatPage() {
                         <div
                           key={s.id}
                           className={`rounded-lg border p-3 space-y-2 transition-colors ${
-                            currentSessionId === s.id
-                              ? 'border-primary bg-primary/5'
-                              : 'hover:bg-muted/50'
+                           currentSessionId === s.id
+                               ? 'border-brand bg-brand/5'
+                               : 'hover:bg-muted/50'
                           }`}
                         >
                           <div className="flex items-start gap-2">
@@ -1374,7 +1386,7 @@ export function ChatPage() {
                 </div>
 
                 {/* Agent Token Management */}
-                <div className="space-y-3">
+                <div className="space-y-3" data-tour="agent-token">
                   <Label className="text-sm font-medium">
                     <span className="flex items-center gap-1.5">
                       <Key className="h-3.5 w-3.5" />
@@ -1515,43 +1527,7 @@ export function ChatPage() {
                   </p>
                 </div>
 
-                {/* Chat Model */}
-                <div className="space-y-2">
-                  <Label htmlFor="model" className="text-sm font-medium">
-                    Модель чата
-                  </Label>
-                  <Input
-                    id="model"
-                    type="text"
-                    placeholder="llama3, mistral, gpt-4..."
-                    value={settings.model}
-                    onChange={(e) =>
-                      setSettings({ model: e.target.value })
-                    }
-                  />
-                </div>
 
-                {/* Embedding Model */}
-                <div className="space-y-2">
-                  <Label htmlFor="embed-model" className="text-sm font-medium">
-                    <span className="flex items-center gap-1.5">
-                      <Database className="h-3.5 w-3.5" />
-                      Модель эмбеддингов
-                    </span>
-                  </Label>
-                  <Input
-                    id="embed-model"
-                    type="text"
-                    placeholder="nomic-embed-text"
-                    value={settings.embedModel}
-                    onChange={(e) =>
-                      setSettings({ embedModel: e.target.value })
-                    }
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Для векторизации документов через Ollama
-                  </p>
-                </div>
               </TabsContent>
 
               {/* Documents Tab */}
@@ -1604,7 +1580,7 @@ export function ChatPage() {
                           key={doc.id}
                           className={`rounded-lg border p-3 space-y-2 transition-colors ${
                             selectedDocumentId === doc.id
-                              ? 'border-primary bg-primary/5'
+                              ? 'border-brand bg-brand/5'
                               : 'hover:bg-muted/50'
                           }`}
                         >
@@ -1770,7 +1746,7 @@ export function ChatPage() {
                           key={prompt.id}
                           className={`rounded-lg border p-3 space-y-2 transition-colors ${
                             selectedPromptId === prompt.id
-                              ? 'border-primary bg-primary/5'
+                              ? 'border-brand bg-brand/5'
                               : 'hover:bg-muted/50'
                           }`}
                         >
@@ -1840,8 +1816,9 @@ export function ChatPage() {
                 </ScrollArea>
               </TabsContent>
             </Tabs>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Main Chat Area */}
         <div className="flex flex-1 flex-col min-w-0">
@@ -1899,7 +1876,7 @@ export function ChatPage() {
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center space-y-4 max-w-md">
                     <div className="flex justify-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 text-brand">
                         <MessageCircle className="h-8 w-8" />
                       </div>
                     </div>
@@ -1924,18 +1901,32 @@ export function ChatPage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 max-w-3xl mx-auto pb-6">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4 max-w-3xl mx-auto pb-6"
+                >
+                  <AnimatePresence initial={false}>
                   {messages.map((message) => (
-                    <MarkdownMessage
+                    <motion.div
                       key={message.id}
-                      message={message}
-                      onDelete={handleDeleteMessage}
-                      onEdit={handleEditMessage}
-                      onResend={handleResendMessage}
-                    />
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <MarkdownMessage
+                        message={message}
+                        onDelete={handleDeleteMessage}
+                        onEdit={handleEditMessage}
+                        onResend={handleResendMessage}
+                      />
+                    </motion.div>
                   ))}
+                  </AnimatePresence>
                   <div ref={messagesEndRef} />
-                </div>
+                </motion.div>
               )}
             </ScrollArea>
             {/* Scroll-to-bottom button */}
@@ -1976,6 +1967,7 @@ export function ChatPage() {
               <div className="flex-1 relative">
                 <Textarea
                   ref={inputRef}
+                  data-tour="chat-input"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -2056,7 +2048,7 @@ export function ChatPage() {
                   size="icon"
                   onClick={sendMessage}
                   disabled={!input.trim() || !agentOnline}
-                  className="h-11 w-11 shrink-0"
+                  className="h-11 w-11 shrink-0 bg-brand text-brand-foreground hover:bg-brand/90 disabled:bg-brand/50"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

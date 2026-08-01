@@ -103,6 +103,10 @@ interface ChatState {
   setSettingsOpen: (open: boolean) => void
   sidebarWidth: number
   setSidebarWidth: (width: number) => void
+
+  // Tour
+  hasSeenTour: boolean
+  setHasSeenTour: (seen: boolean) => void
 }
 
 export const useChatStore = create<ChatState>()(
@@ -211,6 +215,10 @@ export const useChatStore = create<ChatState>()(
       setSettingsOpen: (open) => set({ settingsOpen: open }),
       sidebarWidth: 320,
       setSidebarWidth: (width) => set({ sidebarWidth: width }),
+
+      // Tour
+      hasSeenTour: false,
+      setHasSeenTour: (seen) => set({ hasSeenTour: seen }),
     }),
     {
       name: 'leaky-chat-storage-v2',
@@ -226,6 +234,7 @@ export const useChatStore = create<ChatState>()(
         selectedDocumentId: state.selectedDocumentId,
         selectedPromptId: state.selectedPromptId,
         sidebarWidth: state.sidebarWidth,
+        hasSeenTour: state.hasSeenTour,
       }),
     }
   )
