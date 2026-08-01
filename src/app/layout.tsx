@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,26 +25,27 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "TunnelChat — Прокси к локальной LLM",
+  title: "EdgeChat — Прокси к локальной LLM",
   description: "MVP: проксируйте запросы от UI к вашей локальной модели через интернет с потоковым стримингом ответов.",
   keywords: ["LLM", "Ollama", "ngrok", "chat", "streaming", "proxy", "local AI"],
   authors: [{ name: "Leaky Chat" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions)
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <Providers>
+        <Providers session={session}>
           {children}
           <Toaster />
         </Providers>

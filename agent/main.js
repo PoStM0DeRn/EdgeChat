@@ -69,7 +69,7 @@ function createWindow() {
 function createTray() {
   const icon = nativeImage.createEmpty()
   tray = new Tray(icon)
-  tray.setToolTip('TunnelChat Agent')
+  tray.setToolTip('EdgeChat Agent')
 
   updateTrayMenu()
 

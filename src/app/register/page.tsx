@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Logo } from '@/components/ui/logo'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -46,7 +47,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-sm space-y-6 p-6">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">TunnelChat</h1>
+          <Logo showTagline className="justify-center mb-4" />
           <p className="text-sm text-muted-foreground">Создайте новый аккаунт</p>
         </div>
 

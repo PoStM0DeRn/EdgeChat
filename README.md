@@ -1,4 +1,4 @@
-# EdgeChat (TunnelChat)
+# EdgeChat
 
 Прокси к локальной LLM через Desktop Agent — без проброса портов и ngrok.
 
