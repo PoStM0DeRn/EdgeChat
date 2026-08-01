@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EdgeChat — Инвесторам</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <style>
+    @import url('https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/font/css/geist.min.css');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --background: oklch(0.145 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.205 0 0);
+      --card-foreground: oklch(0.985 0 0);
+      --primary: oklch(0.922 0 0);
+      --primary-foreground: oklch(0.205 0 0);
+      --secondary: oklch(0.269 0 0);
+      --secondary-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.269 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --accent: oklch(0.269 0 0);
+      --accent-foreground: oklch(0.985 0 0);
+      --border: oklch(1 0 0 / 10%);
+      --input: oklch(1 0 0 / 15%);
+      --ring: oklch(0.556 0 0);
+      --radius: 0.625rem;
+      --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Geist Mono', monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.145 0 0);
+        --card: oklch(1 0 0);
+        --card-foreground: oklch(0.145 0 0);
+        --primary: oklch(0.205 0 0);
+        --primary-foreground: oklch(0.985 0 0);
+        --secondary: oklch(0.97 0 0);
+        --secondary-foreground: oklch(0.205 0 0);
+        --muted: oklch(0.97 0 0);
+        --muted-foreground: oklch(0.556 0 0);
+        --accent: oklch(0.97 0 0);
+        --accent-foreground: oklch(0.205 0 0);
+        --border: oklch(0.922 0 0);
+        --input: oklch(0.922 0 0);
+        --ring: oklch(0.708 0 0);
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--background);
+      color: var(--foreground);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+
+    /* ===== Utility Classes ===== */
+    .container { max-width: 1152px; margin: 0 auto; padding: 0 1rem; }
+    .container-sm { max-width: 768px; margin: 0 auto; padding: 0 1rem; }
+    .container-xs { max-width: 640px; margin: 0 auto; padding: 0 1rem; }
+
+    .section { padding: 6rem 1rem; }
+    .section-muted { background: var(--secondary); }
+    .section-heading { text-align: center; margin-bottom: 3rem; }
+    .section-heading h2 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.025em; }
+    .section-heading p { margin-top: 0.5rem; color: var(--muted-foreground); }
+    @media (min-width: 640px) { .section-heading h2 { font-size: 2.25rem; } }
+
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-6 { gap: 1.5rem; }
+    .gap-8 { gap: 2rem; }
+    .gap-12 { gap: 3rem; }
+
+    .grid { display: grid; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .shrink-0 { flex-shrink: 0; }
+    .w-full { width: 100%; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .overflow-hidden { overflow: hidden; }
+    .z-10 { z-index: 10; }
+    .z-50 { z-index: 50; }
+    .hidden { display: none !important; }
+
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+    .text-5xl { font-size: 3rem; line-height: 1; }
+    .text-6xl { font-size: 3.75rem; line-height: 1; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .leading-relaxed { line-height: 1.625; }
+    .font-mono { font-family: var(--font-mono); }
+    .text-muted { color: var(--muted-foreground); }
+    .text-green { color: #16a34a; }
+    .text-primary { color: var(--foreground); }
+
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mb-12 { margin-bottom: 3rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .mt-12 { margin-top: 3rem; }
+    .mt-16 { margin-top: 4rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .p-1 { padding: 0.25rem; }
+    .p-4 { padding: 1rem; }
+    .p-6 { padding: 1.5rem; }
+
+    .border { border: 1px solid var(--border); }
+    .border-b { border-bottom: 1px solid var(--border); }
+    .border-t { border-top: 1px solid var(--border); }
+    .border-2 { border-width: 2px; }
+    .border-foreground { border-color: var(--foreground); }
+    .rounded { border-radius: calc(var(--radius) - 2px); }
+    .rounded-md { border-radius: calc(var(--radius) - 2px); }
+    .rounded-lg { border-radius: var(--radius); }
+    .rounded-xl { border-radius: calc(var(--radius) + 4px); }
+    .rounded-full { border-radius: 9999px; }
+
+    .bg-background { background: var(--background); }
+    .bg-card { background: var(--card); }
+    .bg-secondary { background: var(--secondary); }
+    .bg-primary { background: var(--primary); }
+    .bg-primary\/10 { background: color-mix(in oklch, var(--primary) 10%, transparent); }
+    .bg-foreground { background: var(--foreground); }
+    .bg-muted { background: var(--muted); }
+    .text-background { color: var(--background); }
+    .text-foreground { color: var(--foreground); }
+    .text-card-foreground { color: var(--card-foreground); }
+
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+    .shadow-lg { box-shadow: 0 4px 20px rgb(0 0 0 / 0.08); }
+    .shadow-2xl { box-shadow: 0 12px 40px rgb(0 0 0 / 0.12); }
+    .ring { box-shadow: 0 0 0 1px var(--ring); }
+
+    .transition { transition: all 0.2s ease; }
+    .transition-colors { transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease; }
+
+    /* ===== Button ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+      font-weight: 500;
+      height: 2.25rem;
+      padding: 0 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+      line-height: 1;
+    }
+    .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
+    .btn:disabled { pointer-events: none; opacity: 0.5; }
+    .btn svg { flex-shrink: 0; }
+
+    .btn-primary { background: var(--primary); color: var(--primary-foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline { border: 1px solid var(--input); background: var(--background); box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); }
+    .btn-outline:hover { background: var(--accent); }
+    .btn-ghost { background: transparent; }
+    .btn-ghost:hover { background: var(--accent); }
+    .btn-lg { height: 2.5rem; padding: 0 2rem; border-radius: calc(var(--radius) - 2px); }
+    .btn-sm { height: 2rem; padding: 0 0.75rem; font-size: 0.75rem; }
+
+    /* ===== Card ===== */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.06); border-color: color-mix(in oklch, var(--foreground) 20%, transparent); }
+    .card-highlight { border-color: var(--foreground); }
+    .card-highlight:hover { border-color: var(--foreground); }
+
+    /* ===== Badge ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: var(--secondary);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+    }
+
+    /* ===== Icon Box ===== */
+    .icon-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: var(--radius);
+      background: var(--secondary);
+      flex-shrink: 0;
+    }
+    .icon-box-lg {
+      width: 3rem;
+      height: 3rem;
+    }
+    .icon-box svg { color: var(--foreground); }
+
+    /* ===== Metric ===== */
+    .metric-value { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1; }
+    .metric-label { font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.5rem; }
+
+    /* ===== Navbar ===== */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in oklch, var(--background) 80%, transparent);
+      backdrop-filter: blur(12px);
+    }
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.5rem;
+      max-width: 1152px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius);
+      background: var(--foreground);
+      color: var(--background);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .navbar-links {
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+    }
+    @media (min-width: 768px) { .navbar-links { display: flex; } }
+    .navbar-links a { transition: color 0.2s ease; }
+    .navbar-links a:hover { color: var(--foreground); }
+    .navbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* ===== Lang Toggle ===== */
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted-foreground);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lang-toggle:hover { color: var(--foreground); border-color: var(--foreground); }
+
+    /* ===== Language visibility ===== */
+    [data-lang="ru"] { display: none; }
+    [data-lang="en"] { display: none; }
+    html[lang="ru"] [data-lang="ru"] { display: revert; }
+    html[lang="en"] [data-lang="en"] { display: revert; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 90vh;
+      padding: 6rem 1rem 4rem;
+      text-align: center;
+    }
+    .hero-glow {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in oklch, var(--muted-foreground) 15%, transparent), transparent);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; max-width: 48rem; }
+    .hero h1 { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 1rem; }
+    .hero-subtitle { font-size: 1.25rem; font-weight: 500; color: var(--muted-foreground); margin-bottom: 0.5rem; }
+    .hero-desc { font-size: 1rem; color: var(--muted-foreground); max-width: 36rem; margin: 0 auto 2rem; line-height: 1.625; }
+
+    @media (min-width: 640px) {
+      .hero h1 { font-size: 3.75rem; }
+    }
+
+    /* ===== Grids ===== */
+    .grid-2 { grid-template-columns: 1fr; gap: 1.5rem; }
+    .grid-3 { grid-template-columns: 1fr; gap: 1.5rem; }
+    .grid-4 { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .grid-features { grid-template-columns: 1fr; gap: 1.5rem; }
+
+    @media (min-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-features { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 768px) {
+      .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (min-width: 1024px) {
+      .grid-features { grid-template-columns: 1fr 1fr 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    }
+
+    /* ===== Traction Metric Cards ===== */
+    .metric-card {
+      text-align: center;
+      padding: 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+    }
+    .metric-card .value { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em; }
+    .metric-card .label { font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.25rem; }
+
+    /* ===== Step ===== */
+    .step-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 9999px;
+      border: 2px solid color-mix(in oklch, var(--foreground) 20%, transparent);
+      background: var(--card);
+      margin: 0 auto 1rem;
+    }
+
+    /* ===== Pricing ===== */
+    .pricing-grid { display: grid; gap: 1.5rem; max-width: 48rem; margin: 0 auto; }
+    @media (min-width: 640px) { .pricing-grid { grid-template-columns: 1fr 1fr; } }
+    .pricing-card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+    .pricing-card:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.06); }
+    .pricing-card.featured {
+      border-color: var(--foreground);
+      box-shadow: 0 4px 20px rgb(0 0 0 / 0.08);
+      transform: scale(1.02);
+    }
+    .pricing-card.featured:hover {
+      box-shadow: 0 8px 30px rgb(0 0 0 / 0.12);
+    }
+    .pricing-popular {
+      position: absolute;
+      top: -0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--foreground);
+      color: var(--background);
+      padding: 0.125rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .pricing-price { font-size: 2.25rem; font-weight: 700; line-height: 1; }
+    .pricing-period { color: var(--muted-foreground); font-size: 0.875rem; }
+    .pricing-features { margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.5rem; }
+    .pricing-features li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+    .pricing-features li .check { color: #16a34a; width: 1rem; height: 1rem; flex-shrink: 0; }
+    .pricing-cta { width: 100%; }
+
+    /* ===== FAQ Accordion ===== */
+    .accordion-item {
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      background: var(--card);
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .accordion-btn {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 500;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--foreground);
+      font-size: 0.9375rem;
+      font-family: inherit;
+      transition: background 0.2s ease;
+    }
+    .accordion-btn:hover { background: var(--secondary); }
+    .accordion-chevron { transition: transform 0.2s ease; }
+    .accordion-item.open .accordion-chevron { transform: rotate(180deg); }
+    .accordion-content {
+      padding: 0 1rem 1rem;
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      display: none;
+    }
+    .accordion-item.open .accordion-content { display: block; }
+
+    /* ===== Footer ===== */
+    .footer { border-top: 1px solid var(--border); padding: 3rem 1rem; }
+    .footer-grid {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+    .footer-col h4 { font-weight: 600; margin-bottom: 0.75rem; }
+    .footer-col ul { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem; color: var(--muted-foreground); }
+    .footer-col a { transition: color 0.2s ease; }
+    .footer-col a:hover { color: var(--foreground); }
+    .footer-copy {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 639px) {
+      .section { padding: 3rem 1rem; }
+      .hero { padding: 5rem 1rem 3rem; min-height: 80vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================ -->
+  <!-- NAVBAR -->
+  <!-- ============================================ -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="#" class="navbar-brand">
+        <span class="navbar-logo">E</span>
+        EdgeChat
+      </a>
+      <div class="navbar-links">
+        <a href="#problem" data-lang="ru">Проблема</a>
+        <a href="#problem" data-lang="en">Problem</a>
+        <a href="#solution" data-lang="ru">Решение</a>
+        <a href="#solution" data-lang="en">Solution</a>
+        <a href="#product" data-lang="ru">Продукт</a>
+        <a href="#product" data-lang="en">Product</a>
+        <a href="#market" data-lang="ru">Рынок</a>
+        <a href="#market" data-lang="en">Market</a>
+        <a href="#traction" data-lang="ru">Трекшн</a>
+        <a href="#traction" data-lang="en">Traction</a>
+        <a href="#pricing" data-lang="ru">Тарифы</a>
+        <a href="#pricing" data-lang="en">Pricing</a>
+      </div>
+      <div class="navbar-actions">
+        <button class="lang-toggle" onclick="toggleLang()" title="Switch language">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span id="lang-label">EN</span>
+        </button>
+        <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-outline btn-sm" data-lang="ru">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-outline btn-sm" data-lang="en">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================ -->
+  <!-- HERO -->
+  <!-- ============================================ -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="badge" style="margin-bottom:1.5rem; display:inline-flex;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span data-lang="ru">Open Source • Твой AI из любой точки</span>
+        <span data-lang="en">Open Source • Your AI from Anywhere</span>
+      </div>
+      <h1>
+        <span data-lang="ru">Твой локальный AI<br/>из любой точки</span>
+        <span data-lang="en">Your Local AI<br/>from Anywhere</span>
+      </h1>
+      <p class="hero-subtitle" data-lang="ru">Чат, ComfyUI, RAG — всё работает на твоём ПК, доступно в браузере</p>
+      <p class="hero-subtitle" data-lang="en">Chat, ComfyUI, RAG — all running on your machine, accessible from any browser</p>
+      <p class="hero-desc" data-lang="ru">
+        Desktop Agent подключает твой локальный Ollama / LM Studio к облачному прокси.
+        Получи полный контроль над своими данными, никаких GPU в облаке.
+      </p>
+      <p class="hero-desc" data-lang="en">
+        Desktop Agent bridges your local Ollama / LM Studio to a cloud proxy.
+        Full data privacy, no cloud GPU needed.
+      </p>
+      <div class="flex items-center justify-center gap-3">
+        <a href="#product" class="btn btn-primary btn-lg">
+          <span data-lang="ru">Как работает</span>
+          <span data-lang="en">How it works</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-outline btn-lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+
+      <!-- Preview cards -->
+      <div style="margin-top:4rem; display:grid; gap:1rem; grid-template-columns:1fr; text-align:left; max-width:64rem; margin-left:auto; margin-right:auto;">
+        <div style="display:grid; gap:1rem;" class="grid-2">
+          <div class="card" style="padding:0.25rem; box-shadow:0 12px 40px rgb(0 0 0 / 0.12);">
+            <div style="border-radius:var(--radius); background:var(--secondary); padding:1.5rem;">
+              <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                <span style="display:block; width:0.75rem; height:0.75rem; border-radius:9999px; background:#ef4444;"></span>
+                <span style="display:block; width:0.75rem; height:0.75rem; border-radius:9999px; background:#eab308;"></span>
+                <span style="display:block; width:0.75rem; height:0.75rem; border-radius:9999px; background:#22c55e;"></span>
+              </div>
+              <div style="font-family:var(--font-mono); font-size:0.875rem; display:flex; flex-direction:column; gap:0.5rem;">
+                <div><span style="color:#22c55e;">$</span> <span style="color:var(--muted-foreground);">curl -X POST /api/chat \</span></div>
+                <div><span style="color:var(--muted-foreground);">&nbsp;&nbsp;-H "Authorization: Bearer $TOKEN" \</span></div>
+                <div><span style="color:var(--muted-foreground);">&nbsp;&nbsp;-d '{"message":"Hello LLM"}'</span></div>
+                <div style="margin-top:0.5rem;">
+                  <span style="color:#22c55e;">$</span>
+                  <span style="color:var(--muted-foreground);">&nbsp;Streaming response from local LLM...</span>
+                  <span style="display:inline-block; width:0.75rem; height:1rem; background:var(--foreground); opacity:0.8; margin-left:0.25rem; animation:pulse 1.5s infinite;"></span>
+                </div>
+                <div style="color:var(--muted-foreground); margin-top:0.25rem;">
+                  &gt; <span style="color:var(--foreground);">Hello! I'm running on your local machine via Ollama. How can I help?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:0.25rem; box-shadow:0 12px 40px rgb(0 0 0 / 0.12);">
+            <div style="border-radius:var(--radius); background:var(--secondary); overflow:hidden; min-height:180px; display:flex; align-items:center; justify-content:center;">
+              <div style="text-align:center; padding:1rem;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+                </svg>
+                <p style="margin-top:0.5rem; font-size:0.875rem; color:var(--muted-foreground);" data-lang="ru">Desktop Agent UI</p>
+                <p style="margin-top:0.5rem; font-size:0.875rem; color:var(--muted-foreground);" data-lang="en">Desktop Agent</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PROBLEM -->
+  <!-- ============================================ -->
+  <section id="problem" class="section section-muted">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Проблема</h2>
+        <h2 data-lang="en">The Problem</h2>
+        <p data-lang="ru">Почему облачные LLM не подходят для многих сценариев</p>
+        <p data-lang="en">Why cloud LLMs don't fit many use cases</p>
+      </div>
+      <div style="max-width:48rem; margin:0 auto;" class="grid-2">
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="icon-box" style="background:#fef2f2;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold" data-lang="ru">Утечка данных</h3>
+            <h3 class="font-semibold" data-lang="en">Data Leakage</h3>
+          </div>
+          <p class="text-sm text-muted" data-lang="ru">Каждый запрос к ChatGPT/Gemini уходит на сервера третьих сторон. Для работы с конфиденциальными данными это неприемлемо.</p>
+          <p class="text-sm text-muted" data-lang="en">Every request to ChatGPT/Gemini goes to third-party servers. Not acceptable for sensitive data.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="icon-box" style="background:#fef2f2;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold" data-lang="ru">Высокая стоимость</h3>
+            <h3 class="font-semibold" data-lang="en">High Cost</h3>
+          </div>
+          <p class="text-sm text-muted" data-lang="ru">Запускать LLM в облаке дорого: GPU-инстансы от $0.50/ч + API-рентабельность. Локальная модель бесплатна после покупки железа.</p>
+          <p class="text-sm text-muted" data-lang="en">Cloud GPU instances start at $0.50/hr + API markup. Local models are free after hardware purchase.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="icon-box" style="background:#fef2f2;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold" data-lang="ru">Vendor Lock-in</h3>
+            <h3 class="font-semibold" data-lang="en">Vendor Lock-in</h3>
+          </div>
+          <p class="text-sm text-muted" data-lang="ru">Привязка к одному провайдеру: смена модели = переписывание интеграции. Локальная LLM — полный контроль.</p>
+          <p class="text-sm text-muted" data-lang="en">Tied to one provider: switching models means rewriting integrations. Local LLM gives full control.</p>
+        </div>
+        <div class="card">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="icon-box" style="background:#fef2f2;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold" data-lang="ru">Нет офлайн-доступа</h3>
+            <h3 class="font-semibold" data-lang="en">No Offline Access</h3>
+          </div>
+          <p class="text-sm text-muted" data-lang="ru">Без интернета облачные LLM недоступны. Локальный AI работает всегда, даже в изолированных сетях.</p>
+          <p class="text-sm text-muted" data-lang="en">No internet = no cloud LLM. Local AI works anywhere, even in air-gapped networks.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SOLUTION -->
+  <!-- ============================================ -->
+  <section id="solution" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Решение</h2>
+        <h2 data-lang="en">The Solution</h2>
+        <p data-lang="ru">Desktop Agent + SaaS = локальный AI, доступный откуда угодно</p>
+        <p data-lang="en">Desktop Agent + SaaS = local AI, accessible from anywhere</p>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr; gap:2rem; max-width:56rem; margin:0 auto;">
+        <div style="display:grid; gap:1.5rem;" class="grid-3">
+          <div class="card text-center">
+            <div class="icon-box mx-auto" style="margin-bottom:1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold mb-1" data-lang="ru">Desktop Agent</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">Desktop Agent</h3>
+            <p class="text-sm text-muted" data-lang="ru">Electron-приложение, которое подключается к Ollama/LM Studio и прокидывает API через Socket.IO</p>
+            <p class="text-sm text-muted" data-lang="en">Electron app that connects to Ollama/LM Studio and proxies the API via Socket.IO</p>
+          </div>
+          <div class="card text-center">
+            <div class="icon-box mx-auto" style="margin-bottom:1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold mb-1" data-lang="ru">SaaS Proxy</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">SaaS Proxy</h3>
+            <p class="text-sm text-muted" data-lang="ru">Next.js + WS Server принимают запросы из браузера и перенаправляют Агенту через WebSocket</p>
+            <p class="text-sm text-muted" data-lang="en">Next.js + WS Server accept browser requests and relay them to the Agent via WebSocket</p>
+          </div>
+          <div class="card text-center">
+            <div class="icon-box mx-auto" style="margin-bottom:1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold mb-1" data-lang="ru">ComfyUI Tunnel</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">ComfyUI Tunnel</h3>
+            <p class="text-sm text-muted" data-lang="ru">Полноценный SPA ComfyUI через браузер с генерацией изображений на твоём GPU</p>
+            <p class="text-sm text-muted" data-lang="en">Full ComfyUI SPA in the browser with image generation on your local GPU</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PRODUCT / HOW IT WORKS -->
+  <!-- ============================================ -->
+  <section id="product" class="section section-muted">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Как это работает</h2>
+        <h2 data-lang="en">How It Works</h2>
+        <p data-lang="ru">4 шага до своего AI из любой точки</p>
+        <p data-lang="en">4 steps to your AI from anywhere</p>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr; gap:2rem; max-width:56rem; margin:0 auto;">
+        <div class="grid-4" style="gap:2rem;">
+          <div class="text-center">
+            <div class="step-icon">
+              <span class="font-bold" style="font-size:1.125rem;">1</span>
+            </div>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="ru">Шаг 1</p>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="en">Step 1</p>
+            <h3 class="font-semibold mb-1" data-lang="ru">Установи Ollama</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">Install Ollama</h3>
+            <p class="text-sm text-muted" data-lang="ru">Скачай Ollama или LM Studio, запусти любую модель локально</p>
+            <p class="text-sm text-muted" data-lang="en">Download Ollama or LM Studio, run any model locally</p>
+          </div>
+          <div class="text-center">
+            <div class="step-icon">
+              <span class="font-bold" style="font-size:1.125rem;">2</span>
+            </div>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="ru">Шаг 2</p>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="en">Step 2</p>
+            <h3 class="font-semibold mb-1" data-lang="ru">Desktop Agent</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">Desktop Agent</h3>
+            <p class="text-sm text-muted" data-lang="ru">Запусти Agent, вставь токен — он подключится к облаку</p>
+            <p class="text-sm text-muted" data-lang="en">Launch the Agent, paste your token — it connects to the cloud</p>
+          </div>
+          <div class="text-center">
+            <div class="step-icon">
+              <span class="font-bold" style="font-size:1.125rem;">3</span>
+            </div>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="ru">Шаг 3</p>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="en">Step 3</p>
+            <h3 class="font-semibold mb-1" data-lang="ru">Настрой токен</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">Set up Token</h3>
+            <p class="text-sm text-muted" data-lang="ru">Создай токен в веб-интерфейсе и вставь его в Agent</p>
+            <p class="text-sm text-muted" data-lang="en">Create a token in the web UI and paste it into the Agent</p>
+          </div>
+          <div class="text-center">
+            <div class="step-icon">
+              <span class="font-bold" style="font-size:1.125rem;">4</span>
+            </div>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="ru">Шаг 4</p>
+            <p class="text-xs font-medium text-muted mb-1" data-lang="en">Step 4</p>
+            <h3 class="font-semibold mb-1" data-lang="ru">Пользуйся</h3>
+            <h3 class="font-semibold mb-1" data-lang="en">Start Using</h3>
+            <p class="text-sm text-muted" data-lang="ru">Чат, RAG, ComfyUI — всё доступно из любого браузера</p>
+            <p class="text-sm text-muted" data-lang="en">Chat, RAG, ComfyUI — all accessible from any browser</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture diagram -->
+      <div style="margin-top:4rem;">
+        <div class="card" style="padding:2rem;">
+          <h3 class="font-semibold mb-4 text-center" data-lang="ru">Архитектура</h3>
+          <h3 class="font-semibold mb-4 text-center" data-lang="en">Architecture</h3>
+          <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:0.75rem; font-size:0.875rem;">
+            <div class="card" style="padding:0.75rem 1rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.375rem;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Browser</div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <div class="card" style="padding:0.75rem 1rem; border-color:var(--foreground);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.375rem;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> WS Server</div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <div class="card" style="padding:0.75rem 1rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:inline; vertical-align:middle; margin-right:0.375rem;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg> Desktop Agent</div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <div class="card" style="padding:0.75rem 1rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.375rem;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> Ollama / LM Studio</div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <div class="card" style="padding:0.75rem 1rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; vertical-align:middle; margin-right:0.375rem;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg> ComfyUI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- MARKET -->
+  <!-- ============================================ -->
+  <section id="market" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Рынок</h2>
+        <h2 data-lang="en">Market Opportunity</h2>
+        <p data-lang="ru">Быстрорастущий рынок локальных AI-инструментов</p>
+        <p data-lang="en">Fast-growing market for self-hosted AI tools</p>
+      </div>
+      <div style="max-width:48rem; margin:0 auto;">
+        <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap:1.5rem;">
+          <div class="metric-card">
+            <div class="value">$2B</div>
+            <div class="label" data-lang="ru">TAM — рынок AI-инференса для SMB</div>
+            <div class="label" data-lang="en">TAM — AI inference for SMBs</div>
+          </div>
+          <div class="metric-card">
+            <div class="value">$400M</div>
+            <div class="label" data-lang="ru">SAM — self-hosted LLM решения</div>
+            <div class="label" data-lang="en">SAM — Self-hosted LLM solutions</div>
+          </div>
+          <div class="metric-card">
+            <div class="value">$40M</div>
+            <div class="label" data-lang="ru">SOM — open-source AI прокси</div>
+            <div class="label" data-lang="en">SOM — Open-source AI proxies</div>
+          </div>
+        </div>
+        <div style="margin-top:2rem; text-align:center;">
+          <p class="text-sm text-muted" data-lang="ru">
+            Рынок self-hosted AI растёт на 35% ежегодно (CAGR 2024–2030).
+            Драйверы: приватность данных, регуляторные требования (GDPR, CCPA),
+            снижение стоимости локальных GPU и open-source моделей.
+          </p>
+          <p class="text-sm text-muted" data-lang="en">
+            Self-hosted AI market growing at 35% CAGR (2024–2030).
+            Drivers: data privacy, regulatory requirements (GDPR, CCPA),
+            declining local GPU costs, and open-source model adoption.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- TRACTION -->
+  <!-- ============================================ -->
+  <section id="traction" class="section section-muted">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Трекшн</h2>
+        <h2 data-lang="en">Traction</h2>
+        <p data-lang="ru">Ранний этап, первые пользователи</p>
+        <p data-lang="en">Early stage, initial traction</p>
+      </div>
+      <div style="max-width:48rem; margin:0 auto;">
+        <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:1.5rem;">
+          <div class="metric-card">
+            <div class="value">1.2K</div>
+            <div class="label" data-lang="ru">⭐ GitHub Stars</div>
+            <div class="label" data-lang="en">⭐ GitHub Stars</div>
+          </div>
+          <div class="metric-card">
+            <div class="value">500+</div>
+            <div class="label" data-lang="ru">📋 Pre-registrations (waitlist)</div>
+            <div class="label" data-lang="en">📋 Pre-registrations (waitlist)</div>
+          </div>
+          <div class="metric-card">
+            <div class="value">340+</div>
+            <div class="label" data-lang="ru">⬇️ Desktop Agent Downloads</div>
+            <div class="label" data-lang="en">⬇️ Desktop Agent Downloads</div>
+          </div>
+        </div>
+        <div style="margin-top:2rem;">
+          <div class="card" style="text-align:center;">
+            <div class="flex items-center justify-center gap-3" style="flex-wrap:wrap;">
+              <div>
+                <div class="value" style="font-size:1.75rem;">15+</div>
+                <div class="label" data-lang="ru">🔵 Weekly Active Agents</div>
+                <div class="label" data-lang="en">🔵 Weekly Active Agents</div>
+              </div>
+              <div style="width:1px; height:3rem; background:var(--border);"></div>
+              <div>
+                <div class="value" style="font-size:1.75rem;">$0</div>
+                <div class="label" data-lang="ru">💰 MRR (pre-revenue)</div>
+                <div class="label" data-lang="en">💰 MRR (pre-revenue)</div>
+              </div>
+              <div style="width:1px; height:3rem; background:var(--border);"></div>
+              <div>
+                <div class="value" style="font-size:1.75rem;">97%</div>
+                <div class="label" data-lang="ru">🟢 Agent Uptime</div>
+                <div class="label" data-lang="en">🟢 Agent Uptime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- BUSINESS MODEL -->
+  <!-- ============================================ -->
+  <section id="pricing" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Бизнес-модель</h2>
+        <h2 data-lang="en">Business Model</h2>
+        <p data-lang="ru">Freemium с повышением конверсии в Pro через лимиты</p>
+        <p data-lang="en">Freemium with Pro upgrade via usage limits</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3 class="font-semibold text-lg mb-1">Free</h3>
+          <p class="text-sm text-muted mb-4" data-lang="ru">Для личного использования</p>
+          <p class="text-sm text-muted mb-4" data-lang="en">For personal use</p>
+          <div class="pricing-price">$0</div>
+          <ul class="pricing-features">
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">Неограниченные чаты</span>
+              <span data-lang="en">Unlimited chats</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">3 сессии одновременно</span>
+              <span data-lang="en">3 concurrent sessions</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">1 токен Агента</span>
+              <span data-lang="en">1 agent token</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">RAG до 5 документов</span>
+              <span data-lang="en">RAG up to 5 documents</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">ComfyUI Tunnel</span>
+              <span data-lang="en">ComfyUI Tunnel</span>
+            </li>
+          </ul>
+          <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-outline pricing-cta">
+            <span data-lang="ru">Начать бесплатно</span>
+            <span data-lang="en">Get started</span>
+          </a>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-popular" data-lang="ru">Популярный</div>
+          <div class="pricing-popular" data-lang="en">Popular</div>
+          <h3 class="font-semibold text-lg mb-1">Pro</h3>
+          <p class="text-sm text-muted mb-4" data-lang="ru">Для профессионалов</p>
+          <p class="text-sm text-muted mb-4" data-lang="en">For professionals</p>
+          <div class="pricing-price">$5</div>
+          <span class="pricing-period"> / месяц</span>
+          <ul class="pricing-features">
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">Всё из Free</span>
+              <span data-lang="en">Everything in Free</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">Безлимитные сессии</span>
+              <span data-lang="en">Unlimited sessions</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">10 токенов Агента</span>
+              <span data-lang="en">10 agent tokens</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">RAG до 100 документов</span>
+              <span data-lang="en">RAG up to 100 documents</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">100 генераций изображений / мес</span>
+              <span data-lang="en">100 image generations / mo</span>
+            </li>
+            <li>
+              <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              <span data-lang="ru">Приоритетная поддержка</span>
+              <span data-lang="en">Priority support</span>
+            </li>
+          </ul>
+          <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-primary pricing-cta">
+            <span data-lang="ru">Оформить Pro</span>
+            <span data-lang="en">Get Pro</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FAQ -->
+  <!-- ============================================ -->
+  <section id="faq" class="section section-muted">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Часто задаваемые вопросы</h2>
+        <h2 data-lang="en">Frequently Asked Questions</h2>
+      </div>
+      <div style="max-width:42rem; margin:0 auto;">
+        <div class="accordion-item">
+          <button class="accordion-btn" onclick="toggleAccordion(this)">
+            <span data-lang="ru">Чем EdgeChat отличается от ChatGPT?</span>
+            <span data-lang="en">How is EdgeChat different from ChatGPT?</span>
+            <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-content" data-lang="ru">
+            EdgeChat не отправляет ваши данные в облако — весь AI работает локально на вашем ПК. Мы предоставляем только прокси-слой для доступа из браузера. ChatGPT, напротив, обрабатывает все запросы на своих серверах. EdgeChat также поддерживает ComfyUI, RAG, и любые open-source модели.
+          </div>
+          <div class="accordion-content" data-lang="en">
+            EdgeChat never sends your data to the cloud — all AI runs locally on your machine. We only provide a proxy layer for browser access. ChatGPT processes everything on its servers. EdgeChat also supports ComfyUI, RAG, and any open-source model.
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-btn" onclick="toggleAccordion(this)">
+            <span data-lang="ru">Нужен ли мощный GPU?</span>
+            <span data-lang="en">Do I need a powerful GPU?</span>
+            <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-content" data-lang="ru">
+            Не обязательно. Ollama поддерживает CPU-инференс для небольших моделей (Llama 3.2 3B, Qwen 2.5 7B). Для более крупных моделей (30B+) и ComfyUI желателен GPU от 8GB VRAM.
+          </div>
+          <div class="accordion-content" data-lang="en">
+            Not necessarily. Ollama supports CPU inference for smaller models (Llama 3.2 3B, Qwen 2.5 7B). For larger models (30B+) and ComfyUI, a GPU with 8GB+ VRAM is recommended.
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-btn" onclick="toggleAccordion(this)">
+            <span data-lang="ru">Насколько безопасны мои данные?</span>
+            <span data-lang="en">How secure is my data?</span>
+            <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-content" data-lang="ru">
+            Все данные остаются на вашем компьютере. SaaS-прокси не хранит сообщения — они передаются через WebSocket и сразу удаляются. Подключение шифруется (TLS). Токен Агента используется только для аутентификации.
+          </div>
+          <div class="accordion-content" data-lang="en">
+            All data stays on your machine. The SaaS proxy doesn't store messages — they pass through WebSocket and are discarded immediately. Connection is encrypted (TLS). The Agent token is used for authentication only.
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-btn" onclick="toggleAccordion(this)">
+            <span data-lang="ru">Какие модели поддерживаются?</span>
+            <span data-lang="en">Which models are supported?</span>
+            <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-content" data-lang="ru">
+            Любые модели из Ollama (Llama 3, Mistral, Qwen, DeepSeek, Phi...) и LM Studio (OpenAI-совместимый формат). Вы выбираете модель в настройках Агента.
+          </div>
+          <div class="accordion-content" data-lang="en">
+            Any model from Ollama (Llama 3, Mistral, Qwen, DeepSeek, Phi...) and LM Studio (OpenAI-compatible format). You choose the model in the Agent settings.
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button class="accordion-btn" onclick="toggleAccordion(this)">
+            <span data-lang="ru">Как вы планируете зарабатывать?</span>
+            <span data-lang="en">What's the monetization strategy?</span>
+            <svg class="accordion-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-content" data-lang="ru">
+            Freemium-модель: Free навсегда с базовыми лимитами (3 сессии, 1 токен, 5 RAG-документов). Pro за $5/мес снимает все лимиты, добавляет больше токенов и генераций изображений. В перспективе — Team-тарифы для компаний.
+          </div>
+          <div class="accordion-content" data-lang="en">
+            Freemium model: Free forever with basic limits (3 sessions, 1 token, 5 RAG docs). Pro at $5/mo removes all limits, adds more tokens and image generations. Future plans include Team tiers for organizations.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- TEAM -->
+  <!-- ============================================ -->
+  <section id="team" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <h2 data-lang="ru">Команда</h2>
+        <h2 data-lang="en">Team</h2>
+        <p data-lang="ru">Один основатель — full-stack от идеи до деплоя</p>
+        <p data-lang="en">Solo founder — full-stack from idea to deployment</p>
+      </div>
+      <div style="max-width:24rem; margin:0 auto;">
+        <div class="card text-center">
+          <div class="mx-auto" style="display:flex; align-items:center; justify-content:center; width:4rem; height:4rem; border-radius:9999px; background:var(--foreground); color:var(--background); font-size:1.5rem; font-weight:700; margin-bottom:1rem;">
+            V
+          </div>
+          <h3 class="font-semibold">Valeriy</h3>
+          <p class="text-sm text-muted" data-lang="ru">Основатель, full-stack разработчик</p>
+          <p class="text-sm text-muted" data-lang="en">Founder, full-stack developer</p>
+          <p class="text-xs text-muted" style="margin-top:0.5rem;">Next.js • React • Prisma • Socket.IO • Electron • Docker • Stripe</p>
+          <div class="flex items-center justify-center gap-2" style="margin-top:0.75rem;">
+            <span class="badge" style="font-size:0.75rem; gap:0.25rem;">
+              <span style="display:inline-block; width:0.5rem; height:0.5rem; border-radius:9999px; background:#22c55e;"></span>
+              <span data-lang="ru">Готов к найму</span>
+              <span data-lang="en">Open to hire</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- CTA -->
+  <!-- ============================================ -->
+  <section class="section section-muted" style="padding:4rem 1rem;">
+    <div class="container text-center" style="max-width:36rem;">
+      <h2 class="text-2xl font-bold tracking-tight mb-4" data-lang="ru">Хотите узнать больше?</h2>
+      <h2 class="text-2xl font-bold tracking-tight mb-4" data-lang="en">Want to learn more?</h2>
+      <p class="text-sm text-muted mb-6" data-lang="ru">
+        Я открыт к обсуждению инвестиций, партнёрств и идей. Свяжитесь со мной любым удобным способом.
+      </p>
+      <p class="text-sm text-muted mb-6" data-lang="en">
+        I'm open to discussing investments, partnerships, and ideas. Reach out any way you like.
+      </p>
+      <div class="flex items-center justify-center gap-3" style="flex-wrap:wrap;">
+        <a href="mailto:valeriy@edgechat.ai" class="btn btn-primary btn-lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          valeriy@edgechat.ai
+        </a>
+        <a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener" class="btn btn-outline btn-lg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- FOOTER -->
+  <!-- ============================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <a href="#" class="navbar-brand" style="margin-bottom:0.75rem; display:inline-flex;">
+            <span class="navbar-logo">E</span>
+            EdgeChat
+          </a>
+          <p class="text-sm text-muted" data-lang="ru">Твой локальный AI из любой точки. Open Source проект.</p>
+          <p class="text-sm text-muted" data-lang="en">Your local AI from anywhere. Open Source project.</p>
+        </div>
+        <div class="footer-col">
+          <h4 data-lang="ru">Продукт</h4>
+          <h4 data-lang="en">Product</h4>
+          <ul>
+            <li><a href="#product" data-lang="ru">Как работает</a><a href="#product" data-lang="en">How it works</a></li>
+            <li><a href="#pricing" data-lang="ru">Тарифы</a><a href="#pricing" data-lang="en">Pricing</a></li>
+            <li><a href="#faq" data-lang="ru">FAQ</a><a href="#faq" data-lang="en">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 data-lang="ru">Ресурсы</h4>
+          <h4 data-lang="en">Resources</h4>
+          <ul>
+            <li><a href="https://github.com/anomalyco/EdgeChat" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#" data-lang="ru">Документация</a><a href="#" data-lang="en">Documentation</a></li>
+            <li><a href="mailto:valeriy@edgechat.ai">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 EdgeChat. <span data-lang="ru">Все права защищены.</span><span data-lang="en">All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Language toggle
+    function toggleLang() {
+      var html = document.documentElement;
+      var label = document.getElementById('lang-label');
+      if (html.lang === 'ru') {
+        html.lang = 'en';
+        label.textContent = 'RU';
+      } else {
+        html.lang = 'ru';
+        label.textContent = 'EN';
+      }
+    }
+
+    // Accordion toggle
+    function toggleAccordion(btn) {
+      var item = btn.closest('.accordion-item');
+      var isOpen = item.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.accordion-item.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      // Open clicked if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+      }
+    }
+
+    // Smooth reveal on scroll
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.card, .metric-card, .step-icon').forEach(function(el, i) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease';
+        el.style.transitionDelay = (i * 0.05) + 's';
+        observer.observe(el);
+      });
+    });
+  </script>
+</body>
+</html>

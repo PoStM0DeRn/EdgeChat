@@ -61,7 +61,7 @@ export function Pricing({ locale }: PricingProps) {
     <section id="pricing" className="py-24 px-4">
       <div className="mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{text.title}</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">{text.title}</h2>
           <p className="mt-2 text-muted-foreground">{text.subtitle}</p>
         </div>
 
@@ -124,8 +124,8 @@ export function Pricing({ locale }: PricingProps) {
           </div>
 
           {/* Pro plan */}
-          <div className="relative rounded-xl border border-foreground bg-card p-6 transition-all shadow-lg scale-[1.02]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-foreground px-3 py-0.5 text-xs font-medium text-background">
+          <div className="relative rounded-xl border border-brand/50 bg-card p-6 transition-all shadow-lg scale-[1.02]">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand px-3 py-0.5 text-xs font-medium text-brand-foreground">
               {locale === 'ru' ? 'Популярный' : 'Popular'}
             </div>
             <div className="mb-4">
@@ -149,7 +149,7 @@ export function Pricing({ locale }: PricingProps) {
               ))}
             </ul>
             <Button
-              className="w-full"
+              className="w-full bg-brand text-brand-foreground hover:bg-brand/90"
               variant="default"
               onClick={handleProClick}
               disabled={loading === 'monthly' || loading === 'yearly'}

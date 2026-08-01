@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, MessageSquare } from 'lucide-react'
+import { motion } from 'framer-motion'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
 
@@ -18,26 +19,52 @@ export function Hero({ locale }: HeroProps) {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.708_0_0/0.15),transparent)]" />
 
       <div className="relative mx-auto max-w-3xl text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-secondary/50 px-3 py-1 text-xs text-muted-foreground">
-          <MessageSquare className="h-3 w-3" />
-          {t(locale).badge.text}
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs text-brand">
+            <MessageSquare className="h-3 w-3" />
+            {t(locale).badge.text}
+          </div>
+        </motion.div>
 
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-6xl">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-4 text-5xl font-bold tracking-tighter sm:text-7xl"
+        >
           {text.title}
-        </h1>
+        </motion.h1>
 
-        <p className="mb-2 text-xl font-medium text-muted-foreground">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-2 text-xl font-medium text-muted-foreground"
+        >
           {text.subtitle}
-        </p>
+        </motion.p>
 
-        <p className="mb-8 text-base text-muted-foreground max-w-xl mx-auto">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="mb-8 text-base text-muted-foreground max-w-xl mx-auto"
+        >
           {text.description}
-        </p>
+        </motion.p>
 
-        <div className="flex items-center justify-center gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex items-center justify-center gap-3"
+        >
           <Link href="/register">
-            <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2 bg-brand text-brand-foreground hover:bg-brand/90">
               {text.cta}
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -47,10 +74,10 @@ export function Hero({ locale }: HeroProps) {
               {text.ctaSecondary}
             </Button>
           </a>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="relative mt-16 mx-auto w-full max-w-5xl grid gap-4 md:grid-cols-2">
+      <div className="relative mt-16 mx-auto w-full max-w-3xl">
         <div className="rounded-xl border bg-card p-1 shadow-2xl">
           <div className="rounded-lg bg-secondary/30 p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -77,11 +104,6 @@ export function Hero({ locale }: HeroProps) {
                 <span className="animate-pulse">▌</span>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="rounded-xl border bg-card p-1 shadow-2xl">
-          <div className="rounded-lg bg-secondary/30 overflow-hidden">
-            <img src="/agent-ui.svg" alt="Desktop Agent" className="w-full h-auto" />
           </div>
         </div>
       </div>

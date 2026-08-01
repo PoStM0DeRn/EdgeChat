@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/logo'
 import type { Locale } from '@/lib/i18n'
 
 interface NavbarProps {
@@ -19,11 +20,8 @@ export function Navbar({ locale, onLocaleChange }: NavbarProps) {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link href="/landing" className="flex items-center gap-2 font-bold text-lg">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background text-sm font-bold">
-              E
-            </div>
-            EdgeChat
+          <Link href="/landing">
+            <Logo />
           </Link>
           <div className="hidden md:flex items-center gap-4 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">{labels.features}</a>
@@ -42,7 +40,7 @@ export function Navbar({ locale, onLocaleChange }: NavbarProps) {
             <Button variant="ghost" size="sm">{labels.login}</Button>
           </Link>
           <Link href="/register">
-            <Button size="sm">{labels.start}</Button>
+            <Button size="sm" className="bg-brand text-brand-foreground hover:bg-brand/90">{labels.start}</Button>
           </Link>
         </div>
       </div>

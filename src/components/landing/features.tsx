@@ -1,6 +1,6 @@
 'use client'
 
-import { Monitor, Download, Globe, Database, Bot, Code } from 'lucide-react'
+import { Monitor, Download, Globe, Database, Bot, Code, Shield } from 'lucide-react'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
 
@@ -24,7 +24,7 @@ export function Features({ locale }: FeaturesProps) {
     <section id="features" className="py-24 px-4">
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{text.title}</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">{text.title}</h2>
           <p className="mt-2 text-muted-foreground">{text.subtitle}</p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -33,10 +33,10 @@ export function Features({ locale }: FeaturesProps) {
             return (
               <div
                 key={item.title}
-                className="group rounded-xl border bg-card p-6 transition-all hover:shadow-md hover:border-foreground/20"
+                className="group rounded-xl border bg-card p-6 transition-all hover:shadow-md hover:border-brand/30"
               >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                  <Icon className="h-5 w-5 text-foreground" />
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10">
+                  <Icon className="h-5 w-5 text-brand" />
                 </div>
                 <h3 className="mb-2 font-semibold">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.description}</p>

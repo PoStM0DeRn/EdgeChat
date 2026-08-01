@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
+import { Logo } from '@/components/ui/logo'
 
 interface FooterProps {
   locale: Locale
@@ -16,11 +17,8 @@ export function Footer({ locale }: FooterProps) {
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href="/landing" className="flex items-center gap-2 font-bold text-lg mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background text-sm font-bold">
-                E
-              </div>
-              EdgeChat
+            <Link href="/landing" className="inline-block mb-3">
+              <Logo />
             </Link>
             <p className="text-sm text-muted-foreground">{text.description}</p>
           </div>
