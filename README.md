@@ -1,63 +1,136 @@
+<div align="center">
+
+[English](README.en.md) · **Русский**
+
+<img src="https://raw.githubusercontent.com/PoStM0DeRn/EdgeChat/main/public/logo.svg" alt="EdgeChat" width="110" />
+
 # EdgeChat
 
-Прокси к локальной LLM через Desktop Agent — без проброса портов и ngrok.
+### Твой локальный AI из любой точки
 
-Загружайте документы, векторизуйте их и получайте ответы на основе вашей базы знаний. Всё работает через WebSocket-мост между SaaS-интерфейсом и вашим локальным компьютером.
+Чат, ComfyUI и RAG через один **Desktop Agent** — без открытых портов, ngrok и VPN. Твои модели работают на твоём ПК, а управляешь ими из любого браузера.
 
-Проект полностью бесплатный и без лимитов. Если хочешь поддержать разработку — сделай добровольный донат через [DonationAlerts](https://www.donationalerts.com/r/edgechat).
+[🌐 edgechat.ru](https://edgechat.ru) · [♡ Поддержать](https://www.donationalerts.com/r/edgechat)
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white&style=flat-square)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square)](https://tailwindcss.com)
+[![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma&logoColor=white&style=flat-square)](https://www.prisma.io)
+[![Electron](https://img.shields.io/badge/Electron-47848F?logo=electron&logoColor=white&style=flat-square)](https://www.electronjs.org)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?logo=socket.io&logoColor=white&style=flat-square)](https://socket.io)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white&style=flat-square)](https://www.docker.com)
+[![Open Source](https://img.shields.io/badge/Open_Source-22c55e?style=flat-square)]()
+
+</div>
+
+---
+
+## Оглавление
+
+- [Возможности](#возможности)
+- [Скриншоты](#скриншоты)
+- [Как это работает](#как-это-работает)
+- [Архитектура](#архитектура)
+- [Быстрый старт](#быстрый-старт)
+- [Docker-деплой на VPS](#docker-деплой-на-vps)
+- [Desktop Agent](#desktop-agent)
+- [Конфигурация](#конфигурация)
+- [Структура проекта](#структура-проекта)
+- [Технологии](#технологии)
+- [Известные ограничения](#известные-ограничения)
+- [Поддержка проекта](#поддержка-проекта)
 
 ## Возможности
 
-- **Чат с локальной LLM** — подключается к Ollama / LM Studio через Desktop Agent
-- **RAG** — загрузка документов (PDF, TXT, MD) → чанкинг → векторизация → ответы на основе документа
-- **Гибридный поиск** — комбинация keyword-поиска (60%) и cosine similarity (40%)
-- **Сессии** — полный CRUD чат-сессий с историей сообщений
-- **Промпты** — системные промпты (6 дефолтных + пользовательские)
-- **Agent Tokens** — DB-backed токены привязаны к аккаунту, можно отозвать
-- **Добровольный донат** — DonationAlerts, без платных тарифов и лимитов
-- **Авторизация** — регистрация / логин через NextAuth + JWT
-- **Rate limiting** — защита API от злоупотреблений
-- **Мобильный адаптив** — `dvh` viewport, touch-оптимизации
-- **Docker деплой** — один `docker compose up` на любой VPS
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>Desktop Agent</b><br />
+      <sub>Один Electron-агент для чата, генерации, ComfyUI и RAG. Запустил — и забыл.</sub>
+    </td>
+    <td align="center">
+      <b>ComfyUI Tunnel</b><br />
+      <sub>Полноценный редактор нодов в браузере через безопасный туннель — как будто ComfyUI стоит рядом.</sub>
+    </td>
+    <td align="center">
+      <b>Доступ откуда угодно</b><br />
+      <sub>Никаких открытых портов, ngrok или VPN. Агент сам выходит на связь через Socket.IO.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>RAG Pipeline</b><br />
+      <sub>Загружай документы (PDF, TXT, MD), векторизуй и получай ответы на основе своих данных.</sub>
+    </td>
+    <td align="center">
+      <b>Multi-Model</b><br />
+      <sub>Qwen, Llama, Mistral, Gemma — любые модели через Ollama или LM Studio.</sub>
+    </td>
+    <td align="center">
+      <b>Генерация изображений</b><br />
+      <sub>ComfyUI-генерация из чата с сохранением результата прямо в историю сообщений.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Безопасность</b><br />
+      <sub>Токены агентов, NextAuth + JWT, rate limiting. Данные остаются на твоём компьютере.</sub>
+    </td>
+    <td align="center">
+      <b>Стриминг ответов</b><br />
+      <sub>Ответы приходят потоком (NDJSON), с разделением на thinking и content.</sub>
+    </td>
+    <td align="center">
+      <b>Docker-деплой</b><br />
+      <sub>Next.js + WS Server + Caddy разворачиваются на VPS одной командой.</sub>
+    </td>
+  </tr>
+</table>
+
+## Скриншоты
+
+> Скриншоты скоро появятся здесь. Пока можно посмотреть живое демо — [edgechat.ru](https://edgechat.ru).
+
+## Как это работает
+
+1. **Установи Ollama / ComfyUI** — загрузи LLM через Ollama или LM Studio. Если нужно — запусти ComfyUI для генерации изображений.
+2. **Запусти Desktop Agent** — установи Electron-агент на свой ПК и укажи токен доступа.
+3. **Подключись к SaaS** — агент сам выходит на связь с облачным сервером через Socket.IO. Никаких портов наружу.
+4. **Пользуйся с любого устройства** — открывай браузер на телефоне, планшете или ноутбуке: чат, генерация, ComfyUI, RAG. Всё доступно.
 
 ## Архитектура
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌───────────────────────────┐     ┌──────────────┐
-│  Браузер    │────▶│  Caddy       │────▶│  WS Server (:3000)       │────▶│  Next.js     │
-│  (SaaS UI)  │◀────│  (:443)      │◀────│  (прокси + WS + Socket.IO)│◀────│  (:3001)     │
-└─────────────┘     └──────────────┘     └───────────────────────────┘     └──────┬───────┘
-                                                                       │
-                                                                       ▼
-                                                              ┌────────────────┐
-                                                              │  Desktop       │
-                                                              │  Agent         │
-                                                              │  (Electron)    │
-                                                              └───────┬────────┘
-                                                                      │
-                                                                      ▼
-                                                             ┌─────────────────┐
-                                                             │  Ollama /       │
-                                                             │  LM Studio      │
-                                                             │  (localhost)    │
-                                                             └─────────────────┘
+             SaaS (облако / VPS)                               Твой компьютер
+┌─────────────┐   ┌──────────────┐   ┌───────────────────┐   ┌──────────────────────┐
+│   Браузер    │──▶│    Caddy     │──▶│  WS Server :3000  │──▶│   Desktop Agent      │
+│  (SaaS UI)   │◀──│  :443 HTTPS  │◀──│  Socket.IO + WS   │◀──│     (Electron)       │
+└─────────────┘   └──────────────┘   └────────┬──────────┘   └──────────┬───────────┘
+                                              │                          │
+                                         HTTP-прокси                 HTTP / WS
+                                              ▼                          ▼
+                                      ┌──────────────┐         ┌──────────────────┐
+                                      │   Next.js    │         │  Ollama / LM Studio│
+                                      │    :3001     │         │  ComfyUI :8188     │
+                                      └──────────────┘         └──────────────────┘
 ```
 
-1. **Desktop Agent** запускается на вашем ПК и подключается к серверу через WebSocket
-2. **Пользователь** отправляет сообщение в веб-интерфейсе
-3. **Next.js API** перенаправляет запрос через WS Server на Desktop Agent
-4. **Agent** вызывает локальную LLM (Ollama/LM Studio) и возвращает ответ
-5. **Ответ** отображается в веб-интерфейсе
+**Как это работает:**
 
-Для RAG: документ загружается → парсится → чанкуется → эмбеддинги создаются через Agent → при запросе релевантные чанки инжектируются в контекст.
+1. **Desktop Agent** запускается на твоём ПК и подключается к серверу через WebSocket (Socket.IO).
+2. Пользователь отправляет сообщение в веб-интерфейсе.
+3. **Next.js API** перенаправляет запрос через WS Server на Desktop Agent.
+4. **Agent** вызывает локальную LLM (Ollama/LM Studio) и возвращает ответ.
+5. Ответ стримится обратно и отображается в веб-интерфейсе.
 
-## Требования
+**RAG:** документ загружается → парсится → чанкуется → эмбеддинги создаются через Agent → при запросе релевантные чанки инжектируются в контекст.
 
-- **Node.js** 20+
-- **Docker** + **Docker Compose** — для деплоя на VPS (рекомендуется)
-- **Ollama** или **LM Studio** — запущенные на вашем ПК
+**ComfyUI Tunnel:** полный ComfyUI SPA проксируется из браузера через Agent (`/comfyui/*`) — HTML переписывается, WebSocket релеится через единый порт, авторизация через токен/куки.
 
-## Быстрый старт (локальная разработка)
+## Быстрый старт
+
+### Локальная разработка
 
 ```bash
 git clone https://github.com/PoStM0DeRn/EdgeChat.git
@@ -76,43 +149,34 @@ NEXTAUTH_URL="http://localhost:3000"
 WS_SERVER_URL="http://localhost:3000"
 ```
 
-### Запуск
+Запуск:
 
-**Терминал 1 — Next.js:**
 ```bash
+# Терминал 1 — Next.js
 npm run dev
-```
 
-**Терминал 2 — WebSocket Server:**
-```bash
+# Терминал 2 — WebSocket Server
 npm run dev:ws
-```
 
-**Терминал 3 — Desktop Agent:**
-```bash
+# Терминал 3 — Desktop Agent
 cd agent
 npm install
 npm start
 ```
 
-Откройте http://localhost:3000.
+Откройте **http://localhost:3000**. Или одной командой — `npm run dev:all` (Next.js + WS Server).
 
-Или одной командой: `npm run dev:all` (Next.js + WS Server).
+## Docker-деплой на VPS
 
-## Docker деплой (VPS)
-
-### 1. Подготовка VPS
+### 1. Подготовка
 
 ```bash
-# Установка Docker
 curl -fsSL https://get.docker.com | sh
-
-# Клонирование репозитория
 git clone https://github.com/PoStM0DeRn/EdgeChat.git /opt/edgechat
 cd /opt/edgechat
 ```
 
-### 2. Создайте `.env`
+### 2. `.env`
 
 ```env
 DATABASE_URL="file:/app/db/custom.db"
@@ -121,9 +185,9 @@ NEXTAUTH_URL="https://ваш-домен.ru"
 WS_SERVER_URL="http://ws-server:3000"
 ```
 
-### 3. Настройте DNS
+### 3. DNS
 
-A-запись вашего домена → IP сервера.
+A-запись вашего домена → IP сервера. Порт 80/443 должны быть открыты.
 
 ### 4. Запуск
 
@@ -131,11 +195,7 @@ A-запись вашего домена → IP сервера.
 docker compose up -d --build
 ```
 
-Caddy автоматически получит SSL-сертификат через Let's Encrypt.
-
-### 5. Поддержка проекта
-
-Проект бесплатный. Добровольные донаты через DonationAlerts: замените `DONATION_URL` в `src/lib/donation.ts` (и ссылку в `investor.html`) на свою страницу.
+Caddy автоматически получит SSL-сертификат через **Let's Encrypt**.
 
 ### Порты
 
@@ -146,13 +206,9 @@ Caddy автоматически получит SSL-сертификат чер�
 | WS Server | 3000 | Единая точка входа (WebSocket + прокси Next.js) |
 | Next.js | 3001 | Только internal (через WS Server) |
 
-### Остановка и обновление
+### Обновление
 
 ```bash
-# Остановка
-docker compose down
-
-# Обновление
 git pull
 docker compose down
 docker compose up -d --build
@@ -173,16 +229,14 @@ npm start
 
 ### Подключение
 
-1. Откройте приложение Agent
-2. Введите **URL сервера**: `https://ваш-домен.ru`
-3. Скопируйте **токен** из веб-интерфейса (Настройки → Токены Агента)
-4. Вставьте токен в поле "Токен Агента"
-5. Укажите **URL LM Studio**: `http://localhost:1234` (по умолчанию)
-6. Нажмите "Подключить"
+1. Откройте приложение Agent.
+2. Введите **URL сервера**: `https://ваш-домен.ru`.
+3. Скопируйте **токен** из веб-интерфейса (Настройки → Токены Агента).
+4. Вставьте токен в поле «Токен Агента».
+5. Укажите **URL LM Studio**: `http://localhost:1234` (по умолчанию).
+6. Нажмите **«Подключить»**.
 
-### Токены агентов
-
-Токены привязаны к аккаунту пользователя. Лимитов нет.
+Токены привязаны к аккаунту пользователя, лимитов нет.
 
 ## Конфигурация
 
@@ -198,9 +252,11 @@ npm start
 ### Модели LLM
 
 Поддерживаются любые модели, доступные через Ollama или LM Studio:
+
 - Qwen 2.5 (рекомендуется для русского языка)
 - Mistral
 - Llama 3
+- Gemma
 - любые другие совместимые модели
 
 ### Модель эмбеддингов
@@ -208,6 +264,9 @@ npm start
 Для RAG используется модель эмбеддингов (по умолчанию `nomic-embed-text` через Ollama).
 
 ## Структура проекта
+
+<details>
+<summary>Раскрыть структуру</summary>
 
 ```
 EdgeChat/
@@ -218,12 +277,10 @@ EdgeChat/
 │   │   ├── login/                # Страница логина
 │   │   ├── register/             # Страница регистрации
 │   │   ├── landing/              # Лендинг
+│   │   ├── comfyui/              # ComfyUI-туннель (прокси + HTML-rewrite)
 │   │   └── api/
 │   │       ├── chat/route.ts     # Прокси запросов к LLM
-│   │       ├── agent/
-│   │       │   ├── tokens/       # CRUD токенов агентов
-│   │       │   ├── verify/route.ts
-│   │       │   └── status/route.ts
+│   │       ├── agent/            # Токены, верификация, статус
 │   │       ├── documents/        # Загрузка и эмбеддинг документов
 │   │       ├── prompts/          # CRUD промптов
 │   │       ├── sessions/         # CRUD сессий чата
@@ -231,35 +288,34 @@ EdgeChat/
 │   │       └── upload/           # Загрузка файлов
 │   ├── components/
 │   │   ├── ui/                   # shadcn/ui компоненты
-│   │   ├── chat/
-│   │   │   └── markdown-message.tsx
+│   │   ├── chat/                 # Компоненты чата
 │   │   ├── landing/              # Секции лендинга
 │   │   └── onboarding/           # Онбординг-тур
 │   └── lib/
 │       ├── db.ts                 # Prisma клиент
 │       ├── store.ts              # Zustand состояние
 │       ├── auth.ts               # NextAuth конфиг
-│       ├── auth-helpers.ts       # Хелперы для сессии
-│       ├── donation.ts           # Ссылка на DonationAlerts
 │       ├── rag.ts                # Гибридный RAG-поиск
-│       ├── rate-limit.ts         # Rate limiting
-│       ├── chunker.ts            # Чанкинг текста
 │       ├── embeddings.ts         # Эмбеддинги
-│       └── pdf-parser.ts         # Парсинг PDF/TXT/MD
+│       ├── chunker.ts            # Чанкинг текста
+│       ├── pdf-parser.ts         # Парсинг PDF/TXT/MD
+│       └── donation.ts           # Ссылка на DonationAlerts
 ├── server/
-│   ├── ws-server.js              # Socket.IO сервер (мост SaaS ↔ Agent)
-│   └── Dockerfile.ws             # Docker-образ для WS сервера
+│   ├── ws-server.js              # Socket.IO мост (SaaS ↔ Agent)
+│   └── Dockerfile.ws             # Docker-образ WS сервера
 ├── agent/
-│   ├── main.js                   # Electron: подключение к WS + прокси к LLM
+│   ├── main.js                   # Electron: подключение + прокси к LLM/ComfyUI
 │   ├── preload.js                # Context bridge
 │   └── index.html                # UI агента
 ├── prisma/
 │   └── schema.prisma             # Схема базы данных
-├── docker-compose.yml            # Docker Compose (app + ws-server + caddy)
+├── docker-compose.yml            # app + ws-server + caddy
 ├── Dockerfile                    # Мульти-stage сборка Next.js
 ├── Caddyfile                     # Reverse proxy с авто-TLS
-└── docker-entrypoint.sh          # Инициализация БД при первом запуске
+└── docker-entrypoint.sh          # Инициализация БД
 ```
+
+</details>
 
 ## Технологии
 
@@ -268,16 +324,27 @@ EdgeChat/
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui |
 | Backend | Next.js API Routes, Prisma ORM |
 | База данных | SQLite |
-| WebSocket | Socket.IO |
+| WebSocket | Socket.IO + ws |
 | Desktop Agent | Electron |
 | Аутентификация | NextAuth.js (Credentials + JWT) |
 | Состояние | Zustand (с persist) |
-| Reverse Proxy | Caddy |
+| Reverse Proxy | Caddy (авто-TLS, Let's Encrypt) |
 | Контейнеризация | Docker, Docker Compose |
 
 ## Известные ограничения
 
-- Стриминг ответов буферизуется (фейковый SSE) — вся генерация приходит разом
 - `chat.tsx` — монолит на ~1900 строк (запланирован рефакторинг)
 - SQLite не подходит для горизонтального масштабирования
-- Rate limiting работает в in-memory (не для кластера)
+- Rate limiting работает in-memory (не для кластера)
+
+## Поддержка проекта
+
+Проект **полностью бесплатный и без лимитов** — и останется таким.
+
+Если хочешь сказать спасибо и помочь покрыть серверные расходы — сделай добровольный донат через [DonationAlerts](https://www.donationalerts.com/r/edgechat).
+
+<div align="center">
+
+**[edgechat.ru](https://edgechat.ru)** · **EdgeChat** · **Твой локальный AI из любой точки**
+
+</div>
