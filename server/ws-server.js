@@ -51,12 +51,38 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/agent/chat' && req.method === 'POST') {
     let body = ''
     req.on('data', (chunk) => { body += chunk })
-    req.on('end', async () => {
+    req.on('end', () => {
       try {
         const { token, requestId, messages, model, systemPrompt } = JSON.parse(body)
-        const result = await sendToAgent(token, { requestId, messages, model, systemPrompt })
-        res.writeHead(200, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ ok: true, chunks: result }))
+        const agent = agents.get(token)
+        if (!agent || Date.now() - agent.lastHeartbeat > 60_000) {
+          res.writeHead(404, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ ok: false, error: 'Агент не подключён' }))
+          return
+        }
+
+        res.writeHead(200, {
+          'Content-Type': 'application/x-ndjson',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        })
+
+        const timeout = setTimeout(() => {
+          res.write(JSON.stringify({ type: 'error', content: 'Таймаут ответа от Агента' }) + '\n')
+          res.end()
+          pendingRequests.delete(requestId)
+        }, 120_000)
+
+        pendingRequests.set(requestId, { res, timeout })
+
+        io.to(agent.socketId).emit('chat:request', {
+          requestId,
+          messages,
+          model,
+          systemPrompt,
+        })
+
+        console.log(`[WS] Streaming chat request to ${agent.name}: ${requestId}`)
       } catch (err) {
         res.writeHead(502, { 'Content-Type': 'application/json' })
         res.end(JSON.stringify({ error: err.message }))
@@ -246,11 +272,11 @@ io.on('connection', (socket) => {
     const pending = pendingRequests.get(requestId)
     if (pending) {
       if (done) {
-        pending.resolve(pending.chunks)
         clearTimeout(pending.timeout)
+        pending.res.end()
         pendingRequests.delete(requestId)
       } else if (type && content !== undefined) {
-        pending.chunks.push({ type, content })
+        pending.res.write(JSON.stringify({ type, content }) + '\n')
       }
     }
   })
@@ -326,7 +352,10 @@ io.on('connection', (socket) => {
 
       for (const [requestId, pending] of pendingRequests) {
         clearTimeout(pending.timeout)
-        pending.reject(new Error('Агент отключился'))
+        if (pending.res) {
+          pending.res.write(JSON.stringify({ type: 'error', content: 'Агент отключился' }) + '\n')
+          pending.res.end()
+        }
         pendingRequests.delete(requestId)
       }
       for (const [requestId, pending] of pendingImageRequests) {

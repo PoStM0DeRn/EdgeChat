@@ -118,16 +118,48 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const result = await wsResponse.json() as { ok: boolean; chunks: { type: string; content: string }[] }
-
-      // Stream collected chunks back to client as SSE
       const stream = new ReadableStream({
-        start(controller) {
-          for (const chunk of result.chunks) {
-            controller.enqueue(
-              new TextEncoder().encode(`data: ${JSON.stringify({ type: chunk.type, content: chunk.content })}\n\n`)
-            )
+        async start(controller) {
+          const reader = wsResponse.body!.getReader()
+          const decoder = new TextDecoder()
+          let buffer = ''
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              buffer += decoder.decode(value, { stream: true })
+              const lines = buffer.split('\n')
+              buffer = lines.pop() || ''
+              for (const line of lines) {
+                const trimmed = line.trim()
+                if (!trimmed) continue
+                try {
+                  const parsed = JSON.parse(trimmed)
+                  if (parsed.type === 'error') {
+                    controller.enqueue(
+                      new TextEncoder().encode(
+                        `data: ${JSON.stringify({ error: parsed.content })}\n\n`
+                      )
+                    )
+                  } else {
+                    controller.enqueue(
+                      new TextEncoder().encode(
+                        `data: ${JSON.stringify({ type: parsed.type, content: parsed.content })}\n\n`
+                      )
+                    )
+                  }
+                } catch {
+                  // skip malformed lines
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Stream read error:', err)
+          } finally {
+            reader.releaseLock()
           }
+
           controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
           controller.close()
         },
