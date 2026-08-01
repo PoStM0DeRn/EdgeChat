@@ -2,7 +2,7 @@
 
 **English** · [Русский](README.md)
 
-<img src="https://raw.githubusercontent.com/PoStM0DeRn/EdgeChat/main/public/logo.svg" alt="EdgeChat" width="110" />
+<img src="https://raw.githubusercontent.com/PoStM0DeRn/EdgeChat/main/public/logo.png" alt="EdgeChat" width="110" />
 
 # EdgeChat
 
