@@ -55,7 +55,9 @@ import {
   RefreshCw,
   Image,
   ExternalLink,
+  Heart,
 } from 'lucide-react'
+import { DONATION_URL } from '@/lib/donation'
 
 export function ChatPage() {
   const { data: session } = useSession()
@@ -115,8 +117,6 @@ export function ChatPage() {
   const [newTokenName, setNewTokenName] = useState('')
   const [tokenLoading, setTokenLoading] = useState(false)
   const [copiedToken, setCopiedToken] = useState(false)
-  const [userPlan, setUserPlan] = useState<string>('free')
-  const [subscriptionEndsAt, setSubEndsAt] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -180,40 +180,6 @@ export function ChatPage() {
     loadSessions()
     if (currentSessionId) {
       loadSessionMessages(currentSessionId)
-    }
-  }, [])
-
-  // Load plan on mount
-  useEffect(() => {
-    fetch('/api/stripe/status')
-      .then(r => r.json())
-      .then(data => {
-        setUserPlan(data.plan || 'free')
-        setSubEndsAt(data.subscriptionEndsAt || null)
-      })
-      .catch(() => {})
-  }, [])
-
-  // Poll for plan upgrade after successful checkout
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('checkout') === 'success') {
-      toast({ title: 'Оплата прошла успешно', description: 'Активируем Pro-подписку…' })
-      // Clean URL without full reload
-      window.history.replaceState({}, '', window.location.pathname)
-      const poll = setInterval(async () => {
-        try {
-          const res = await fetch('/api/stripe/status')
-          const data = await res.json()
-          if (data.plan === 'pro') {
-            setUserPlan('pro')
-            setSubEndsAt(data.subscriptionEndsAt || null)
-            toast({ title: 'Pro-подписка активирована! 🎉' })
-            clearInterval(poll)
-          }
-        } catch { /* retry */ }
-      }, 2000)
-      setTimeout(() => clearInterval(poll), 30_000)
     }
   }, [])
 
@@ -1148,18 +1114,16 @@ export function ChatPage() {
 
           {session?.user && (
             <div className="flex items-center gap-2">
-              {userPlan === 'pro' ? (
-                <span className="text-xs font-medium text-green-600 bg-green-50 dark:bg-green-950 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-200 dark:border-green-800">
-                  Pro
-                </span>
-              ) : (
-                <button
-                  onClick={() => window.open('/landing#pricing', '_self')}
-                  className="text-xs font-medium text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors"
+              <a href={DONATION_URL} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7 gap-1.5 text-brand"
                 >
-                  Free
-                </button>
-              )}
+                  <Heart className="h-3.5 w-3.5" />
+                  Поддержать
+                </Button>
+              </a>
               <span className="hidden sm:inline text-xs text-muted-foreground">
                 {session.user.name || session.user.email}
               </span>

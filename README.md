@@ -4,8 +4,7 @@
 
 Загружайте документы, векторизуйте их и получайте ответы на основе вашей базы знаний. Всё работает через WebSocket-мост между SaaS-интерфейсом и вашим локальным компьютером.
 
-**Free** — 10 документов, 30 сессий, 3 токена агента.
-**Pro** ($5/мес или $50/год) — 50 документов, безлимитные сессии, 10 токенов, повышенный rate limit.
+Проект полностью бесплатный и без лимитов. Если хочешь поддержать разработку — сделай добровольный донат через [DonationAlerts](https://www.donationalerts.com/r/edgechat).
 
 ## Возможности
 
@@ -15,7 +14,7 @@
 - **Сессии** — полный CRUD чат-сессий с историей сообщений
 - **Промпты** — системные промпты (6 дефолтных + пользовательские)
 - **Agent Tokens** — DB-backed токены привязаны к аккаунту, можно отозвать
-- **Free/Pro подписка** — Stripe, лимиты по плану
+- **Добровольный донат** — DonationAlerts, без платных тарифов и лимитов
 - **Авторизация** — регистрация / логин через NextAuth + JWT
 - **Rate limiting** — защита API от злоупотреблений
 - **Мобильный адаптив** — `dvh` viewport, touch-оптимизации
@@ -57,7 +56,6 @@
 - **Node.js** 20+
 - **Docker** + **Docker Compose** — для деплоя на VPS (рекомендуется)
 - **Ollama** или **LM Studio** — запущенные на вашем ПК
-- **Stripe аккаунт** — для приёма платежей (опционально, только для Pro)
 
 ## Быстрый старт (локальная разработка)
 
@@ -121,12 +119,6 @@ DATABASE_URL="file:/app/db/custom.db"
 NEXTAUTH_SECRET="<openssl rand -base64 32>"
 NEXTAUTH_URL="https://ваш-домен.ru"
 WS_SERVER_URL="http://ws-server:3000"
-
-# Stripe (опционально, для Pro-подписки)
-STRIPE_SECRET_KEY="sk_live_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
-NEXT_PUBLIC_STRIPE_PRICE_MONTHLY="price_monthly_xxx"
-NEXT_PUBLIC_STRIPE_PRICE_YEARLY="price_yearly_xxx"
 ```
 
 ### 3. Настройте DNS
@@ -141,13 +133,9 @@ docker compose up -d --build
 
 Caddy автоматически получит SSL-сертификат через Let's Encrypt.
 
-### 5. Настройка Stripe (для Pro)
+### 5. Поддержка проекта
 
-В Stripe Dashboard:
-1. Создайте товар **EdgeChat Pro** с двумя ценами: $5/мес и $50/год
-2. Скопируйте `price_xxx` ID в `.env`
-3. Добавьте Webhook endpoint: `https://ваш-домен.ru/api/stripe/webhook`
-   - События: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+Проект бесплатный. Добровольные донаты через DonationAlerts: замените `DONATION_URL` в `src/lib/donation.ts` (и ссылку в `investor.html`) на свою страницу.
 
 ### Порты
 
@@ -194,9 +182,7 @@ npm start
 
 ### Токены агентов
 
-Токены привязаны к аккаунту пользователя. Лимит зависит от плана:
-- **Free**: до 3 активных токенов
-- **Pro**: до 10 активных токенов
+Токены привязаны к аккаунту пользователя. Лимитов нет.
 
 ## Конфигурация
 
@@ -208,21 +194,6 @@ npm start
 | `NEXTAUTH_SECRET` | Да | Секрет для JWT-сессий (мин. 32 символа) |
 | `NEXTAUTH_URL` | Да | Базовый URL приложения |
 | `WS_SERVER_URL` | Нет | URL WS Server (по умолчанию `http://localhost:3000`) |
-| `STRIPE_SECRET_KEY` | Для Pro | Secret ключ из Stripe Dashboard |
-| `STRIPE_WEBHOOK_SECRET` | Для Pro | Webhook secret из Stripe Dashboard |
-| `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | Для Pro | ID цены $5/мес в Stripe |
-| `NEXT_PUBLIC_STRIPE_PRICE_YEARLY` | Для Pro | ID цены $50/год в Stripe |
-
-### Тарифы
-
-| Фича | Free | Pro |
-|------|------|-----|
-| Документы | 10 | 50 |
-| Сессии чата | 30 | безлимит |
-| Токены агента | 3 | 10 |
-| Кастомные промпты | ✅ | ✅ |
-| Запросов к LLM / мин | 30 | 120 |
-| Цена | $0 | $5/мес или $50/год |
 
 ### Модели LLM
 
@@ -256,18 +227,20 @@ EdgeChat/
 │   │       ├── documents/        # Загрузка и эмбеддинг документов
 │   │       ├── prompts/          # CRUD промптов
 │   │       ├── sessions/         # CRUD сессий чата
-│   │       └── stripe/           # Stripe checkout, webhook, portal, status
+│   │       ├── generate-image/   # Генерация изображений через ComfyUI
+│   │       └── upload/           # Загрузка файлов
 │   ├── components/
 │   │   ├── ui/                   # shadcn/ui компоненты
-│   │   └── chat/
-│   │       └── markdown-message.tsx
+│   │   ├── chat/
+│   │   │   └── markdown-message.tsx
+│   │   ├── landing/              # Секции лендинга
+│   │   └── onboarding/           # Онбординг-тур
 │   └── lib/
 │       ├── db.ts                 # Prisma клиент
 │       ├── store.ts              # Zustand состояние
 │       ├── auth.ts               # NextAuth конфиг
 │       ├── auth-helpers.ts       # Хелперы для сессии
-│       ├── plan-limits.ts        # Лимиты Free/Pro
-│       ├── stripe.ts             # Stripe клиент
+│       ├── donation.ts           # Ссылка на DonationAlerts
 │       ├── rag.ts                # Гибридный RAG-поиск
 │       ├── rate-limit.ts         # Rate limiting
 │       ├── chunker.ts            # Чанкинг текста
@@ -298,7 +271,6 @@ EdgeChat/
 | WebSocket | Socket.IO |
 | Desktop Agent | Electron |
 | Аутентификация | NextAuth.js (Credentials + JWT) |
-| Платежи | Stripe |
 | Состояние | Zustand (с persist) |
 | Reverse Proxy | Caddy |
 | Контейнеризация | Docker, Docker Compose |

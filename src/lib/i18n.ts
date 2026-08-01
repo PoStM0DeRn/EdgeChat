@@ -4,7 +4,7 @@ const translations = {
   ru: {
     nav: {
       features: 'Возможности',
-      pricing: 'Тарифы',
+      donate: 'Поддержать',
       docs: 'Документация',
       login: 'Войти',
       start: 'Начать бесплатно',
@@ -77,34 +77,11 @@ const translations = {
         },
       ],
     },
-    pricing: {
-      title: 'Тарифы',
-      subtitle: 'Бесплатно для большинства. Pro — для тех, кто хочет поддержать проект.',
-      monthly: 'Ежемесячно',
-      yearly: 'Ежегодно',
-      savePercent: 'скидка {p}%',
-      plans: [
-        {
-          name: 'Free',
-          price: '$0',
-          period: '',
-          description: 'Покрывает 99% сценариев',
-          features: ['ComfyUI туннель', '10 документов', '30 сессий', '3 токена агента', '10 генераций', '30 запросов/мин'],
-          cta: 'Начать бесплатно',
-          popular: false,
-        },
-        {
-          name: 'Pro',
-          priceMonthly: '$5',
-          priceYearly: '$50',
-          periodMonthly: '/мес',
-          periodYearly: '/год',
-          description: 'Для активных пользователей',
-          features: ['ComfyUI туннель', '50 документов', 'Безлимитные сессии', '10 токенов агента', '100 генераций', '120 запросов/мин', 'Поддержка автора'],
-          cta: 'Выбрать Pro',
-          popular: true,
-        },
-      ],
+    donation: {
+      title: 'Поддержать проект',
+      subtitle: 'EdgeChat бесплатен и останется таким. Если хочешь поддержать разработку — сделай добровольный донат.',
+      button: 'Сделать донат',
+      note: 'Донат не даёт никаких привилегий — просто говорит проекту «спасибо».',
     },
     faq: {
       title: 'Часто задаваемые вопросы',
@@ -118,8 +95,8 @@ const translations = {
           answer: 'Полный редактор ComfyUI доступен по адресу /comfyui/. Все ноды, превью и WebSocket в реальном времени. Статика кэшируется браузером, редактор отзывчив даже через 4G.',
         },
         {
-          question: 'Зачем платить Pro, если Free всё включает?',
-          answer: 'Free покрывает почти всё: 10 документов, 30 сессий, 10 генераций, ComfyUI без лимитов. Pro снимает лимиты и помогает проекту жить. По сути это донат.',
+          question: 'Как поддержать проект?',
+          answer: 'Проект полностью бесплатный. Если хочешь сказать спасибо — сделай добровольный донат через DonationAlerts, это помогает покрывать серверные расходы.',
         },
         {
           question: 'Нужен ли мощный сервер или VPS?',
@@ -145,7 +122,7 @@ const translations = {
       company: 'Компания',
       legal: 'Юридическая',
       features: 'Возможности',
-      pricing: 'Тарифы',
+      donate: 'Поддержать',
       docs: 'Документация',
       blog: 'Блог',
       about: 'О нас',
@@ -158,7 +135,7 @@ const translations = {
   en: {
     nav: {
       features: 'Features',
-      pricing: 'Pricing',
+      donate: 'Donate',
       docs: 'Docs',
       login: 'Log in',
       start: 'Get Started',
@@ -231,34 +208,11 @@ const translations = {
         },
       ],
     },
-    pricing: {
-      title: 'Pricing',
-      subtitle: 'Free for most. Pro is for those who want to support the project.',
-      monthly: 'Monthly',
-      yearly: 'Yearly',
-      savePercent: 'save {p}%',
-      plans: [
-        {
-          name: 'Free',
-          price: '$0',
-          period: '',
-          description: 'Covers 99% of use cases',
-          features: ['ComfyUI tunnel', '10 documents', '30 sessions', '3 agent tokens', '10 generations', '30 requests/min'],
-          cta: 'Get Started Free',
-          popular: false,
-        },
-        {
-          name: 'Pro',
-          priceMonthly: '$5',
-          priceYearly: '$50',
-          periodMonthly: '/mo',
-          periodYearly: '/yr',
-          description: 'For heavy users',
-          features: ['ComfyUI tunnel', '50 documents', 'Unlimited sessions', '10 agent tokens', '100 generations', '120 requests/min', 'Support the author'],
-          cta: 'Choose Pro',
-          popular: true,
-        },
-      ],
+    donation: {
+      title: 'Support the project',
+      subtitle: 'EdgeChat is free and always will be. If you want to support development — make a voluntary donation.',
+      button: 'Donate',
+      note: 'Donating gives no special perks — it just says "thank you" to the project.',
     },
     faq: {
       title: 'Frequently Asked Questions',
@@ -272,8 +226,8 @@ const translations = {
           answer: 'The full ComfyUI editor is available at /comfyui/. All nodes, previews, and real-time WebSocket. Static assets are cached, the editor stays responsive even on 4G.',
         },
         {
-          question: 'Why pay for Pro if Free has everything?',
-          answer: 'Free covers almost everything: 10 documents, 30 sessions, 10 generations, unlimited ComfyUI. Pro lifts the limits and supports the project — basically a donation.',
+          question: 'How can I support the project?',
+          answer: 'The project is completely free. If you want to say thanks — make a voluntary donation via DonationAlerts, it helps cover server costs.',
         },
         {
           question: 'Do I need a powerful server or VPS?',
@@ -299,7 +253,7 @@ const translations = {
       company: 'Company',
       legal: 'Legal',
       features: 'Features',
-      pricing: 'Pricing',
+      donate: 'Donate',
       docs: 'Docs',
       blog: 'Blog',
       about: 'About',

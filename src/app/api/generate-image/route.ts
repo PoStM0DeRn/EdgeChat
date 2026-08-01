@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, getCurrentUserPlan } from '@/lib/auth-helpers'
-import { checkLimit } from '@/lib/plan-limits'
+import { getCurrentUser } from '@/lib/auth-helpers'
 
 export const runtime = 'nodejs'
 
@@ -12,14 +11,6 @@ export async function POST(req: NextRequest) {
     const userId = await getCurrentUser()
     if (!userId) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 })
-    }
-
-    const limit = await checkLimit(userId, 'imageGenerations')
-    if (!limit.allowed) {
-      return NextResponse.json(
-        { error: `Лимит генераций исчерпан: ${limit.current}/${limit.limit}` },
-        { status: 429 }
-      )
     }
 
     const body = await req.json()

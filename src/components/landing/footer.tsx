@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { Heart } from 'lucide-react'
 import type { Locale } from '@/lib/i18n'
 import { t } from '@/lib/i18n'
 import { Logo } from '@/components/ui/logo'
+import { DONATION_URL } from '@/lib/donation'
 
 interface FooterProps {
   locale: Locale
@@ -26,7 +28,7 @@ export function Footer({ locale }: FooterProps) {
             <h4 className="font-semibold mb-3">{text.product}</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="#features" className="hover:text-foreground transition-colors">{text.features}</a></li>
-              <li><a href="#pricing" className="hover:text-foreground transition-colors">{text.pricing}</a></li>
+              <li><a href={DONATION_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"><Heart className="h-3 w-3 text-brand" />{text.donate}</a></li>
               <li><a href="https://github.com/PoStM0DeRn/EdgeChat" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">{text.docs}</a></li>
             </ul>
           </div>

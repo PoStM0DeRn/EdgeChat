@@ -2,7 +2,7 @@
 
 ## What this is
 
-Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style) + Stripe. Chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) over Socket.IO. Also supports image generation through local ComfyUI. Free/Pro subscription system.
+Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style). Chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) over Socket.IO. Also supports image generation through local ComfyUI. Completely free, no limits; monetization is a voluntary donation via DonationAlerts.
 
 ## Commands
 
@@ -101,16 +101,14 @@ src/
       chat/route.ts           # POST — SSE proxy to LLM via Agent
       generate-image/route.ts # POST — triggers ComfyUI generation via Agent
       upload/route.ts         # POST — receives image file from Agent (agent-token auth)
-      stripe/                 # checkout, webhook, portal, status
       agent/verify/route.ts   # Agent token validation (public)
       agent/status/route.ts   # Agent online check (proxies to WS server)
-      agent/tokens/           # CRUD agent tokens (max depends on plan)
+      agent/tokens/           # CRUD agent tokens
   lib/
     auth.ts                   # NextAuth config (Credentials provider, JWT)
-    auth-helpers.ts           # getCurrentUser(), getCurrentUserPlan()
+    auth-helpers.ts           # getCurrentUser()
     store.ts                  # Zustand with persist middleware
-    plan-limits.ts            # Free/Pro limits + checkLimit()
-    stripe.ts                 # Stripe singleton + price IDs
+    donation.ts               # DONATION_URL — DonationAlerts link (edit to set yours)
     db.ts                     # PrismaClient singleton
     rag.ts                    # Hybrid search (60% keyword, 40% vector)
     embeddings.ts             # Ollama/OpenAI-compatible embedding endpoints
@@ -144,9 +142,7 @@ agent/index.html              # Connection form + LLM + ComfyUI settings
 - **Ollama API has two formats** handled in the chat route:
   - `/api/chat` (Ollama native) — NDJSON
   - `/v1/chat/completions` (OpenAI-compatible) — SSE with `data:` prefix
-- **Free/Pro limits** defined in `src/lib/plan-limits.ts`. Enforced in `checkLimit()` called from document upload, session creation, agent token creation, chat rate limiting, and image generation.
-- **Image generation limit**: `imageGenerations` — counts ChatMessage rows with non-null `imageUrl` across user's sessions.
-- **Stripe webhook** at `/api/stripe/webhook` handles subscription lifecycle. Without it, Pro plan never activates/cancels.
+- **Chat rate limiting** is applied per IP in `src/app/api/chat/route.ts` (fixed 60 req/min). No plan-based limits.
 - **Windows `npm run dev`**: uses bash pipe (`2>&1 | tee`). On Windows PowerShell, run `npx next dev -p 3000` directly.
 - **middleware.ts** was renamed to `proxy.ts` (Next.js 16 deprecation). File stays in `src/`.
 - **`/api/upload` excluded from NextAuth middleware** (`proxy.ts` matcher). Auth is done via `agent-token` HTTP header fallback — the Agent uses its registered token when uploading generated images.
@@ -163,7 +159,7 @@ agent/index.html              # Connection form + LLM + ComfyUI settings
 ## Database
 
 SQLite at `./db/custom.db`. Tables:
-- `User` — includes `plan` ("free"|"pro"), `stripeCustomerId`, `stripeSubscriptionId`, `subscriptionEndsAt`
+- `User` — account with password hash (legacy `plan`/`stripe*` fields are unused leftovers, kept to avoid migration)
 - `Document`, `DocumentChunk` — RAG documents with chunked text + vector embeddings
 - `Prompt` — system prompts (6 defaults seeded, custom per user)
 - `ChatSession`, `ChatMessage` — chat history (`ChatMessage.imageUrl` optional, for generated images)
@@ -178,7 +174,7 @@ After schema changes: `npx prisma db push` (no migrations).
 docker compose up -d --build
 ```
 
-Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy with auto-TLS via Let's Encrypt). Requires `.env` with `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and optional Stripe keys.
+Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy with auto-TLS via Let's Encrypt). Requires `.env` with `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
 
 ## Environment variables
 
@@ -188,10 +184,6 @@ Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy
 | `NEXTAUTH_SECRET` | Yes | ≥32 chars, use `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Yes | Your public URL or `http://localhost:3000` |
 | `WS_SERVER_URL` | Dev | Default `http://localhost:3000` |
-| `STRIPE_SECRET_KEY` | Pro | From Stripe Dashboard |
-| `STRIPE_WEBHOOK_SECRET` | Pro | From Stripe Dashboard webhook settings |
-| `NEXT_PUBLIC_STRIPE_PRICE_MONTHLY` | Pro | Stripe price ID for $5/mo |
-| `NEXT_PUBLIC_STRIPE_PRICE_YEARLY` | Pro | Stripe price ID for $50/yr |
 
 ## Files that matter most
 
@@ -200,8 +192,8 @@ Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy
 3. `src/app/api/generate-image/route.ts` — ComfyUI image generation trigger
 4. `src/app/api/upload/route.ts` — file upload receiver from Agent
 5. `src/lib/store.ts` — Zustand state
-6. `src/lib/auth.ts` — NextAuth config (plan in JWT)
-7. `src/lib/plan-limits.ts` — Free/Pro limits
+6. `src/lib/auth.ts` — NextAuth config (Credentials provider, JWT)
+7. `src/lib/donation.ts` — DonationAlerts link
 8. `src/proxy.ts` — auth middleware
 9. `server/ws-server.js` — WebSocket bridge server (chat + image:request/result)
 10. `agent/main.js` — Desktop Agent (LLM proxy + ComfyUI image generation)

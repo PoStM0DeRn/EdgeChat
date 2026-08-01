@@ -43,7 +43,6 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          plan: user.plan,
         }
       },
     }),
@@ -52,14 +51,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.plan = (user as any).plan
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id: string }).id = token.id as string
-        ;(session.user as { plan: string }).plan = token.plan as string
       }
       return session
     },

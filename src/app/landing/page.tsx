@@ -5,7 +5,7 @@ import { Navbar } from '@/components/landing/navbar'
 import { Hero } from '@/components/landing/hero'
 import { Features } from '@/components/landing/features'
 import { HowItWorks } from '@/components/landing/how-it-works'
-import { Pricing } from '@/components/landing/pricing'
+import { Donation } from '@/components/landing/donation'
 import { FAQ } from '@/components/landing/faq'
 import { Footer } from '@/components/landing/footer'
 import type { Locale } from '@/lib/i18n'
@@ -19,7 +19,7 @@ export default function LandingPage() {
       <Hero locale={locale} />
       <Features locale={locale} />
       <HowItWorks locale={locale} />
-      <Pricing locale={locale} />
+      <Donation locale={locale} />
       <FAQ locale={locale} />
       <Footer locale={locale} />
     </div>
