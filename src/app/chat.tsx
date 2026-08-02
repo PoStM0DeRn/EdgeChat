@@ -98,6 +98,7 @@ export function ChatPage() {
     setSidebarWidth,
     removeMessage,
     replaceMessage,
+    requestTour,
   } = useChatStore()
 
   const [input, setInput] = useState('')
@@ -1114,6 +1115,16 @@ export function ChatPage() {
 
           {session?.user && (
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-7 gap-1.5"
+                onClick={requestTour}
+                title="Обучение"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Обучение
+              </Button>
               <a href={DONATION_URL} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"

@@ -63,7 +63,7 @@ function getCardPosition(
   rect: DOMRect | null
 ): { top: number | string; left: number | string; transform?: string } {
   if (!step.target || !rect) {
-    return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+    return { top: '10%', left: '50%', transform: 'translate(-50%, -50%)' }
   }
   const gap = 16
   const vw = window.innerWidth
@@ -106,8 +106,15 @@ function getCardPosition(
 }
 
 export function TourOverlay() {
-  const { hasSeenTour, settingsOpen, setHasSeenTour, setSettingsOpen, setSidebarTab } =
-    useChatStore()
+  const {
+    hasSeenTour,
+    tourRequested,
+    setHasSeenTour,
+    clearTourRequest,
+    settingsOpen,
+    setSettingsOpen,
+    setSidebarTab,
+  } = useChatStore()
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
@@ -116,10 +123,11 @@ export function TourOverlay() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!hasSeenTour) {
+    if (!hasSeenTour || tourRequested) {
+      setStep(0)
       setVisible(true)
     }
-  }, [hasSeenTour])
+  }, [hasSeenTour, tourRequested])
 
   useEffect(() => {
     if (!visible) return
@@ -148,7 +156,7 @@ export function TourOverlay() {
     const s = STEPS[step]
     if (!s.target) {
       setTargetRect(null)
-      setCardPos({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' })
+      setCardPos({ top: '10%', left: '50%', transform: 'translate(-50%, -50%)' })
       return
     }
     const el = document.querySelector(s.target)
@@ -232,6 +240,7 @@ export function TourOverlay() {
   const finishTour = () => {
     setVisible(false)
     setHasSeenTour(true)
+    clearTourRequest()
   }
 
   if (!visible) return null

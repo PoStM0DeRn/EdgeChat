@@ -107,6 +107,9 @@ interface ChatState {
   // Tour
   hasSeenTour: boolean
   setHasSeenTour: (seen: boolean) => void
+  tourRequested: boolean
+  requestTour: () => void
+  clearTourRequest: () => void
 }
 
 export const useChatStore = create<ChatState>()(
@@ -219,6 +222,9 @@ export const useChatStore = create<ChatState>()(
       // Tour
       hasSeenTour: false,
       setHasSeenTour: (seen) => set({ hasSeenTour: seen }),
+      tourRequested: false,
+      requestTour: () => set({ tourRequested: true }),
+      clearTourRequest: () => set({ tourRequested: false }),
     }),
     {
       name: 'leaky-chat-storage-v2',
