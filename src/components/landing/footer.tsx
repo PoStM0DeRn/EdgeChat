@@ -19,7 +19,7 @@ export function Footer({ locale }: FooterProps) {
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href="/landing" className="inline-block mb-3">
+            <Link href="/" className="inline-block mb-3">
               <Logo />
             </Link>
             <p className="text-sm text-muted-foreground">{text.description}</p>
