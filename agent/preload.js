@@ -6,7 +6,6 @@ contextBridge.exposeInMainWorld('agent', {
   connect: (opts) => ipcRenderer.invoke('connect-agent', opts),
   disconnect: () => ipcRenderer.invoke('disconnect-agent'),
   getStatus: () => ipcRenderer.invoke('get-status'),
-  checkLMStudio: () => ipcRenderer.invoke('check-lmstudio'),
   selectFile: () => ipcRenderer.invoke('select-file'),
   onStatus: (callback) => {
     ipcRenderer.on('status', (_, status) => callback(status))

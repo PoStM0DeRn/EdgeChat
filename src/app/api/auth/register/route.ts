@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
@@ -38,6 +39,14 @@ export async function POST(req: Request) {
         name: name || email.split('@')[0],
         email,
         password: hashedPassword,
+      },
+    })
+
+    await db.agentToken.create({
+      data: {
+        token: randomUUID(),
+        userId: user.id,
+        name: 'Мой агент',
       },
     })
 

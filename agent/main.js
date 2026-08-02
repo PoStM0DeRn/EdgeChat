@@ -139,13 +139,21 @@ function connect(saasUrl, agentToken, agentName) {
     socket.disconnect()
   }
 
-  // Build WS URL: Agent connects directly to WS Server on port 3000
+  // Build WS URL: use explicit port if given, else legacy :3000 for bare IPs,
+  // else default protocol port (80/443) so TLS/domain traffic goes via Caddy.
   let wsUrl
   try {
     const parsed = new URL(saasUrl)
-    wsUrl = `${parsed.protocol}//${parsed.hostname}:3000`
+    const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(parsed.hostname)
+    if (parsed.port) {
+      wsUrl = `${parsed.protocol}//${parsed.hostname}:${parsed.port}`
+    } else if (isIp) {
+      wsUrl = `${parsed.protocol}//${parsed.hostname}:3000`
+    } else {
+      wsUrl = `${parsed.protocol}//${parsed.hostname}`
+    }
   } catch {
-    wsUrl = saasUrl.replace(/\/+$/, '').replace(/:\d+$/, '').replace(/\/.*$/, '') + ':3000'
+    wsUrl = saasUrl.replace(/\/+$/, '')
   }
 
   let reconnectAttempt = 0
@@ -541,40 +549,6 @@ ipcMain.handle('select-file', async () => {
     return result.filePaths[0]
   }
   return null
-})
-
-// LM Studio availability check
-ipcMain.handle('check-lmstudio', async () => {
-  const config = loadConfig()
-  const lmstudioUrl = config.lmstudioUrl || LMSTUDIO_URL
-  try {
-    const url = new URL(lmstudioUrl)
-    return new Promise((resolve) => {
-      const req = http.request({
-        hostname: url.hostname,
-        port: url.port || 1234,
-        path: '/v1/models',
-        method: 'GET',
-        timeout: 5000,
-      }, (res) => {
-        let data = ''
-        res.on('data', (chunk) => { data += chunk })
-        res.on('end', () => {
-          try {
-            const json = JSON.parse(data)
-            resolve({ ok: true, models: json.data?.map((m) => m.id) || [] })
-          } catch {
-            resolve({ ok: false, error: 'Invalid response' })
-          }
-        })
-      })
-      req.on('error', (err) => resolve({ ok: false, error: err.message }))
-      req.on('timeout', () => { req.destroy(); resolve({ ok: false, error: 'Timeout' }) })
-      req.end()
-    })
-  } catch (err) {
-    return { ok: false, error: err.message }
-  }
 })
 
 // ── ComfyUI / Image Generation ──

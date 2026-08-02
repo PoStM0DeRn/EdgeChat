@@ -152,47 +152,6 @@
       color: var(--muted-foreground);
     }
 
-    /* ── LM Studio Badge ── */
-    .lm-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 500;
-      margin-top: 10px;
-      border: 1px solid transparent;
-      transition: all 0.2s;
-    }
-
-    .lm-badge[data-status="ok"] {
-      background: oklch(0.696 0.17 162.48 / 12%);
-      color: var(--success);
-      border-color: oklch(0.696 0.17 162.48 / 20%);
-    }
-
-    .lm-badge[data-status="err"] {
-      background: oklch(0.704 0.191 22.216 / 12%);
-      color: var(--destructive);
-      border-color: oklch(0.704 0.191 22.216 / 20%);
-    }
-
-    .lm-badge__dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .lm-badge[data-status="ok"] .lm-badge__dot {
-      background: var(--success);
-    }
-
-    .lm-badge[data-status="err"] .lm-badge__dot {
-      background: var(--destructive);
-    }
-
     /* ── Form ── */
     .form {
       display: flex;
@@ -362,10 +321,6 @@
       <div class="status__icon" id="status-icon">&#x1f534;</div>
       <div class="status__text" id="status-text">Отключён</div>
       <div class="status__detail" id="status-detail">Настройте подключение ниже</div>
-      <div id="lm-badge" class="lm-badge" data-status="err">
-        <span class="lm-badge__dot"></span>
-        <span id="lm-badge-text">Проверяю LM Studio...</span>
-      </div>
     </div>
 
     <div id="config-form" class="form">
@@ -434,17 +389,6 @@
 
       const status = await window.agent.getStatus()
       updateUI(status)
-
-      const lmstudio = await window.agent.checkLMStudio()
-      const badge = document.getElementById('lm-badge')
-      const badgeText = document.getElementById('lm-badge-text')
-      if (lmstudio.ok) {
-        badge.setAttribute('data-status', 'ok')
-        badgeText.textContent = lmstudio.models?.slice(0, 3).join(', ') || 'Подключён'
-      } else {
-        badge.setAttribute('data-status', 'err')
-        badgeText.textContent = lmstudio.error || 'Не найден'
-      }
 
       window.agent.onStatus((status) => updateUI(status))
     }

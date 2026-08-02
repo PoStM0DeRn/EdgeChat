@@ -2,9 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bot, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bot, X, ChevronLeft, ChevronRight, Download, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useChatStore } from '@/lib/store'
+
+const AGENT_DOWNLOAD_URL =
+  'https://github.com/PoStM0DeRn/EdgeChat/releases/download/v1.0.0/EdgeChat.Agent.1.0.0.exe'
 
 interface StepData {
   target?: string
@@ -18,7 +21,7 @@ const STEPS: StepData[] = [
   {
     title: 'Добро пожаловать в EdgeChat!',
     description:
-      'Этот тур покажет основные возможности. Вы сможете подключить Desktop-Агент, настроить токен и начать общение с локальной LLM.',
+      'Ваш персональный ИИ теперь доступен с любого устройства. Подключите Desktop-Агент в три шага, затем этот тур покажет остальные возможности.',
   },
   {
     target: '[data-tour="sidebar-toggle"]',
@@ -58,9 +61,9 @@ const CARD_HEIGHT_ESTIMATE = 300
 function getCardPosition(
   step: StepData,
   rect: DOMRect | null
-): { top: number; left: number; transform?: string } {
+): { top: number | string; left: number | string; transform?: string } {
   if (!step.target || !rect) {
-    return { top: 0, left: 0, transform: 'translate(-50%, -50%)' }
+    return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
   }
   const gap = 16
   const vw = window.innerWidth
@@ -108,7 +111,9 @@ export function TourOverlay() {
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
-  const [cardPos, setCardPos] = useState({ top: 0, left: 0, transform: undefined as string | undefined })
+  const [cardPos, setCardPos] = useState<{ top: number | string; left: number | string; transform?: string }>({ top: 0, left: 0 })
+  const [agentToken, setAgentToken] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!hasSeenTour) {
@@ -116,11 +121,34 @@ export function TourOverlay() {
     }
   }, [hasSeenTour])
 
+  useEffect(() => {
+    if (!visible) return
+    fetch('/api/agent/tokens')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((tokens) => {
+        if (Array.isArray(tokens) && tokens.length > 0) {
+          setAgentToken(tokens[0].token || '')
+        }
+      })
+      .catch(() => {})
+  }, [visible])
+
+  const handleCopyToken = async () => {
+    if (!agentToken) return
+    try {
+      await navigator.clipboard.writeText(agentToken)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* ignore */
+    }
+  }
+
   const refreshRect = useCallback(() => {
     const s = STEPS[step]
     if (!s.target) {
       setTargetRect(null)
-      setCardPos({ top: 0, left: 0, transform: 'translate(-50%, -50%)' })
+      setCardPos({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' })
       return
     }
     const el = document.querySelector(s.target)
@@ -251,7 +279,7 @@ export function TourOverlay() {
               transform: cardPos.transform,
             }}
           >
-            <div className="bg-popover border rounded-xl shadow-2xl p-5 w-80">
+            <div className={`bg-popover border rounded-xl shadow-2xl p-5 ${isDialog ? 'w-[360px]' : 'w-80'}`}>
               <button
                 onClick={finishTour}
                 className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -260,16 +288,60 @@ export function TourOverlay() {
               </button>
 
               {isDialog ? (
-                <div className="text-center space-y-3 py-4">
+                <div className="text-center space-y-4 py-2">
                   <div className="flex justify-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <Bot className="h-7 w-7" />
                     </div>
                   </div>
-                  <h2 className="text-lg font-semibold">{currentStep.title}</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {currentStep.description}
-                  </p>
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold">{currentStep.title}</h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {currentStep.description}
+                    </p>
+                  </div>
+
+                  <ol className="space-y-3 text-left">
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                        1
+                      </span>
+                      <div className="space-y-1.5 min-w-0">
+                        <p className="text-sm font-medium">Скачайте Агент для Windows/Mac</p>
+                        <Button size="sm" variant="outline" className="h-8 w-full" asChild>
+                          <a href={AGENT_DOWNLOAD_URL} target="_blank" rel="noreferrer">
+                            <Download className="h-4 w-4 mr-1.5" />
+                            Скачать .exe
+                          </a>
+                        </Button>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                        2
+                      </span>
+                      <div className="space-y-1.5 min-w-0">
+                        <p className="text-sm font-medium">Скопируйте ваш персональный токен</p>
+                        <div className="flex items-center gap-2">
+                          <code className="min-w-0 flex-1 truncate rounded-md border bg-muted/50 px-2 py-1.5 font-mono text-xs">
+                            {agentToken || '••••••••••••••••'}
+                          </code>
+                          <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={handleCopyToken}>
+                            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                            {copied ? 'Готово' : 'Копировать'}
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                        3
+                      </span>
+                      <p className="text-sm font-medium leading-6">
+                        Вставьте токен в приложение Агента на вашем ПК и нажмите «Connect».
+                      </p>
+                    </li>
+                  </ol>
                 </div>
               ) : (
                 <div className="space-y-2">
