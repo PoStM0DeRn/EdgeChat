@@ -14,7 +14,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TourOverlay } from '@/components/onboarding/tour-overlay'
-import { Logo } from '@/components/ui/logo'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Dialog,
@@ -1060,7 +1059,6 @@ export function ChatPage() {
                 <PanelLeft className="h-5 w-5" />
               )}
             </Button>
-            <Logo size="md" />
             {currentSessionId && messages.length > 0 && (
               <>
                 <Separator orientation="vertical" className="h-5" />

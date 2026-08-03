@@ -1,1 +1,1 @@
-export const DONATION_URL = 'https://www.donationalerts.com/r/edgechat'
+export const DONATION_URL = 'https://boosty.to/edgechat/donate'

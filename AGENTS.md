@@ -2,7 +2,7 @@
 
 ## What this is
 
-Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style). Chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) over Socket.IO. Also supports image generation through local ComfyUI. Completely free, no limits; monetization is a voluntary donation via DonationAlerts.
+Next.js 16 + React 19 + Prisma (SQLite) + Tailwind CSS 4 + shadcn/ui (New York style). Chat proxy that forwards messages to a local LLM (LM Studio / Ollama) via Desktop Agent (Electron) over Socket.IO. Also supports image generation through local ComfyUI. Completely free, no limits; monetization is a voluntary donation via Boosty.
 
 ## Commands
 
@@ -108,7 +108,7 @@ src/
     auth.ts                   # NextAuth config (Credentials provider, JWT)
     auth-helpers.ts           # getCurrentUser()
     store.ts                  # Zustand with persist middleware
-    donation.ts               # DONATION_URL — DonationAlerts link (edit to set yours)
+    donation.ts               # DONATION_URL — Boosty link (edit to set yours)
     db.ts                     # PrismaClient singleton
     rag.ts                    # Hybrid search (60% keyword, 40% vector)
     embeddings.ts             # Ollama/OpenAI-compatible embedding endpoints
@@ -193,7 +193,7 @@ Three services: `app` (Next.js), `ws-server` (Socket.IO), `caddy` (reverse proxy
 4. `src/app/api/upload/route.ts` — file upload receiver from Agent
 5. `src/lib/store.ts` — Zustand state
 6. `src/lib/auth.ts` — NextAuth config (Credentials provider, JWT)
-7. `src/lib/donation.ts` — DonationAlerts link
+7. `src/lib/donation.ts` — Boosty link
 8. `src/proxy.ts` — auth middleware
 9. `server/ws-server.js` — WebSocket bridge server (chat + image:request/result)
 10. `agent/main.js` — Desktop Agent (LLM proxy + ComfyUI image generation)

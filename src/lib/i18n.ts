@@ -96,7 +96,7 @@ const translations = {
         },
         {
           question: 'Как поддержать проект?',
-          answer: 'Проект полностью бесплатный. Если хочешь сказать спасибо — сделай добровольный донат через DonationAlerts, это помогает покрывать серверные расходы.',
+          answer: 'Проект полностью бесплатный. Если хочешь сказать спасибо — сделай добровольный донат через Boosty, это помогает покрывать серверные расходы.',
         },
         {
           question: 'Нужен ли мощный сервер или VPS?',
@@ -227,7 +227,7 @@ const translations = {
         },
         {
           question: 'How can I support the project?',
-          answer: 'The project is completely free. If you want to say thanks — make a voluntary donation via DonationAlerts, it helps cover server costs.',
+          answer: 'The project is completely free. If you want to say thanks — make a voluntary donation via Boosty, it helps cover server costs.',
         },
         {
           question: 'Do I need a powerful server or VPS?',

@@ -10,7 +10,7 @@
 
 Чат, ComfyUI и RAG через один **Desktop Agent** — без открытых портов, ngrok и VPN. Твои модели работают на твоём ПК, а управляешь ими из любого браузера.
 
-[🌐 edgechat.ru](https://edgechat.ru) · [♡ Поддержать](https://www.donationalerts.com/r/edgechat)
+[🌐 edgechat.ru](https://edgechat.ru) · [♡ Поддержать](https://boosty.to/edgechat/donate)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white&style=flat-square)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev)
@@ -299,7 +299,7 @@ EdgeChat/
 │       ├── embeddings.ts         # Эмбеддинги
 │       ├── chunker.ts            # Чанкинг текста
 │       ├── pdf-parser.ts         # Парсинг PDF/TXT/MD
-│       └── donation.ts           # Ссылка на DonationAlerts
+│       └── donation.ts           # Ссылка на Boosty
 ├── server/
 │   ├── ws-server.js              # Socket.IO мост (SaaS ↔ Agent)
 │   └── Dockerfile.ws             # Docker-образ WS сервера
@@ -341,7 +341,7 @@ EdgeChat/
 
 Проект **полностью бесплатный и без лимитов** — и останется таким.
 
-Если хочешь сказать спасибо и помочь покрыть серверные расходы — сделай добровольный донат через [DonationAlerts](https://www.donationalerts.com/r/edgechat).
+Если хочешь сказать спасибо и помочь покрыть серверные расходы — сделай добровольный донат через [Boosty](https://boosty.to/edgechat/donate).
 
 <div align="center">
 

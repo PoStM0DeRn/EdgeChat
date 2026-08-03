@@ -10,7 +10,7 @@
 
 Chat, ComfyUI, and RAG through a single **Desktop Agent** — no open ports, ngrok, or VPN. Your models run on your PC, and you control them from any browser.
 
-[🌐 edgechat.ru](https://edgechat.ru) · [♡ Support](https://www.donationalerts.com/r/edgechat)
+[🌐 edgechat.ru](https://edgechat.ru) · [♡ Support](https://boosty.to/edgechat/donate)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white&style=flat-square)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white&style=flat-square)](https://react.dev)
@@ -299,7 +299,7 @@ EdgeChat/
 │       ├── embeddings.ts         # Embeddings
 │       ├── chunker.ts            # Text chunking
 │       ├── pdf-parser.ts         # PDF/TXT/MD parsing
-│       └── donation.ts           # DonationAlerts link
+│       └── donation.ts           # Boosty link
 ├── server/
 │   ├── ws-server.js              # Socket.IO bridge (SaaS ↔ Agent)
 │   └── Dockerfile.ws             # WS Server Docker image
@@ -341,7 +341,7 @@ EdgeChat/
 
 The project is **completely free and unlimited** — and will always stay that way.
 
-If you'd like to say thanks and help cover server costs — make a voluntary donation via [DonationAlerts](https://www.donationalerts.com/r/edgechat).
+If you'd like to say thanks and help cover server costs — make a voluntary donation via [Boosty](https://boosty.to/edgechat/donate).
 
 <div align="center">
 
