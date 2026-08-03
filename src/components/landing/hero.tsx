@@ -61,7 +61,7 @@ export function Hero({ locale }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex items-center justify-center gap-3"
+          className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
           <Link href="/register">
             <Button size="lg" className="gap-2 bg-brand text-brand-foreground hover:bg-brand/90">

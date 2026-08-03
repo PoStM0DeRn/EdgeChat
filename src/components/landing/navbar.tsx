@@ -38,13 +38,13 @@ export function Navbar({ locale, onLocaleChange }: NavbarProps) {
           >
             {locale === 'ru' ? 'EN' : 'RU'}
           </button>
-          <a href={DONATION_URL} target="_blank" rel="noopener noreferrer">
+          <a href={DONATION_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex">
             <Button variant="outline" size="sm" className="gap-1.5">
               <Heart className="h-3.5 w-3.5 text-brand" />
               {labels.donate}
             </Button>
           </a>
-          <Link href="/login">
+          <Link href="/login" className="hidden sm:inline-flex">
             <Button variant="ghost" size="sm">{labels.login}</Button>
           </Link>
           <Link href="/register">

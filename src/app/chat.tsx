@@ -56,6 +56,7 @@ import {
   Image,
   ExternalLink,
   Heart,
+  LogOut,
 } from 'lucide-react'
 import { DONATION_URL } from '@/lib/donation'
 
@@ -1066,7 +1067,7 @@ export function ChatPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-7 w-7 shrink-0 hidden sm:inline-flex"
                   onClick={handleExportChat}
                   title="Экспортировать чат"
                 >
@@ -1078,7 +1079,7 @@ export function ChatPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
+                className="h-7 w-7 shrink-0 hidden sm:inline-flex"
                 onClick={createNewSession}
                 title="Новый чат"
               >
@@ -1123,9 +1124,9 @@ export function ChatPage() {
                 title="Обучение"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Обучение
+                <span className="hidden sm:inline">Обучение</span>
               </Button>
-              <a href={DONATION_URL} target="_blank" rel="noopener noreferrer">
+              <a href={DONATION_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1144,7 +1145,8 @@ export function ChatPage() {
                 className="text-xs h-7"
                 onClick={() => signOut({ callbackUrl: '/login' })}
               >
-                Выйти
+                <LogOut className="h-3.5 w-3.5 sm:hidden" />
+                <span className="hidden sm:inline">Выйти</span>
               </Button>
             </div>
           )}
@@ -1155,6 +1157,12 @@ export function ChatPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
+        {settingsOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+            onClick={() => setSettingsOpen(false)}
+          />
+        )}
         <AnimatePresence initial={false}>
         {settingsOpen && (
           <motion.div
@@ -1162,12 +1170,12 @@ export function ChatPage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -320, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            style={{ width: sidebarWidth, minWidth: 240, maxWidth: 600 }}
-            className="h-full border-r bg-card flex flex-col shrink-0 overflow-hidden relative"
+            style={{ width: `min(${sidebarWidth}px, 85vw)`, minWidth: 240, maxWidth: 600 }}
+            className="h-full border-r bg-card flex flex-col shrink-0 overflow-hidden relative fixed inset-y-0 left-0 z-40 lg:static"
           >
             {/* Resize handle */}
             <div
-              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-brand/40 active:bg-brand/60 z-10"
+              className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-brand/40 active:bg-brand/60 z-10 hidden lg:block"
               onMouseDown={(e) => {
                 setIsResizing(true)
                 e.preventDefault()
@@ -1983,7 +1991,7 @@ export function ChatPage() {
                 </Button>
 
                 {imagePromptOpen && (
-                  <div className="absolute bottom-full mb-2 right-0 w-96 p-4 rounded-lg border bg-popover shadow-xl z-50">
+                  <div className="absolute bottom-full mb-2 right-0 w-[min(24rem,calc(100vw-2rem))] p-4 rounded-lg border bg-popover shadow-xl z-50">
                     <p className="text-sm font-medium mb-2">Опишите изображение</p>
                     <Textarea
                       value={imagePrompt}

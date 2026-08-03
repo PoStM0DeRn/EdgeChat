@@ -288,7 +288,7 @@ export function TourOverlay() {
               transform: cardPos.transform,
             }}
           >
-            <div className={`bg-popover border rounded-xl shadow-2xl p-5 ${isDialog ? 'w-[360px]' : 'w-80'}`}>
+            <div className={`bg-popover border rounded-xl shadow-2xl p-5 max-h-[85dvh] overflow-y-auto ${isDialog ? 'w-[min(360px,calc(100vw-2rem))]' : 'w-[min(20rem,calc(100vw-2rem))]'}`}>
               <button
                 onClick={finishTour}
                 className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground transition-colors"

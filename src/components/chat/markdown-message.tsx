@@ -26,7 +26,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
   }
 
   return (
-    <div className="relative my-2 rounded-md overflow-hidden">
+    <div className="relative my-2 rounded-md overflow-x-auto max-w-full">
       <div className="flex items-center justify-between bg-[#1e1e1e] px-4 py-1.5 text-xs text-gray-400">
         <span>{language || 'code'}</span>
         <button
@@ -45,6 +45,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
           margin: 0,
           borderRadius: 0,
           fontSize: '0.875rem',
+          overflowX: 'auto',
         }}
       >
         {children}
